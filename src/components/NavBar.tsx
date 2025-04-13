@@ -13,6 +13,7 @@ import {
   Activity,
   User,
   X,
+  Sun,
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { toast } from "sonner";
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,12 +30,40 @@ const NavBar = () => {
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
+    
+    // Check if dark mode preference is saved
+    const darkMode = localStorage.getItem("darkMode") === "true";
+    setIsDarkMode(darkMode);
+    
+    // Apply dark mode class if enabled
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     toast.success("Logged out successfully");
     navigate("/");
+  };
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    
+    // Save preference to localStorage
+    localStorage.setItem("darkMode", String(newDarkMode));
+    
+    // Toggle dark mode class on html element
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    
+    toast.success(`${newDarkMode ? "Dark" : "Light"} mode enabled`);
   };
 
   const closeMenu = () => {
@@ -59,7 +89,7 @@ const NavBar = () => {
       className={`flex items-center space-x-2 rounded-lg px-3 py-2 transition-colors ${
         isActive(to)
           ? "bg-mindease text-white"
-          : "text-gray-700 hover:bg-mindease-light hover:text-mindease"
+          : "text-gray-700 hover:bg-mindease-light hover:text-mindease dark:text-gray-300 dark:hover:bg-gray-700"
       }`}
     >
       <Icon size={20} />
@@ -68,7 +98,7 @@ const NavBar = () => {
   );
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b bg-white shadow-sm">
+    <nav className="sticky top-0 z-40 w-full border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center">
           <Logo />
@@ -88,11 +118,12 @@ const NavBar = () => {
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={() => {}}
+            onClick={toggleDarkMode}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
-            <Moon size={20} />
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </Button>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {user?.email}
           </span>
           <Button
@@ -121,9 +152,9 @@ const NavBar = () => {
       {/* Mobile Navigation Overlay */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
-          <div className="absolute right-0 h-screen w-64 bg-white p-4 shadow-lg">
+          <div className="absolute right-0 h-screen w-64 bg-white p-4 shadow-lg dark:bg-gray-800">
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-semibold">Menu</span>
+              <span className="font-semibold dark:text-white">Menu</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -140,16 +171,26 @@ const NavBar = () => {
               <NavItem to="/exercises" icon={Brain} label="Exercises" />
               <NavItem to="/chat" icon={MessageCircle} label="Chat" />
               
-              <div className="my-4 border-t border-gray-200"></div>
+              <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex w-full items-center justify-start space-x-2 px-3 py-2"
+                onClick={toggleDarkMode}
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
+              </Button>
               
               <div className="flex items-center space-x-2 rounded-lg px-3 py-2">
                 <User size={20} />
-                <span className="text-sm">{user?.email}</span>
+                <span className="text-sm dark:text-gray-300">{user?.email}</span>
               </div>
               
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600"
+                className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900 dark:hover:text-red-400"
               >
                 <LogOut size={20} />
                 <span>Logout</span>
