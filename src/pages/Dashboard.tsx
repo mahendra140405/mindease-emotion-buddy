@@ -8,7 +8,7 @@ import MoodOverview from "@/components/dashboard/MoodOverview";
 import ExerciseCard from "@/components/dashboard/ExerciseCard";
 import { 
   Users, Activity, Brain, Clock, MessageCircle, 
-  Wind, Lotus, Music, Heart 
+  Wind, Flower, Music, Heart 
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -128,7 +128,7 @@ const Dashboard = () => {
             title="Mindful Meditation"
             description="Learn to focus on the present moment and calm your mind."
             duration="10 minutes"
-            icon={<Lotus className="h-6 w-6" />}
+            icon={<Flower className="h-6 w-6" />}
             link="/exercises/2"
           />
           <ExerciseCard

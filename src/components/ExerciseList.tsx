@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Heart, Brain, Wind, Music, Lotus, Moon } from "lucide-react";
+import { Search, Heart, Brain, Wind, Music, Flower, Moon } from "lucide-react";
 import ExerciseCard from "@/components/dashboard/ExerciseCard";
 
 const exercisesData = [
@@ -21,7 +21,7 @@ const exercisesData = [
     description: "Learn to focus on the present moment and calm your mind.",
     duration: "10 minutes",
     category: "meditation",
-    icon: <Lotus className="h-6 w-6" />,
+    icon: <Flower className="h-6 w-6" />,
   },
   {
     id: 3,
