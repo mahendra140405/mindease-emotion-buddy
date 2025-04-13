@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MoodTrackerPage from "./pages/MoodTrackerPage";
 import ExercisesPage from "./pages/ExercisesPage";
+import ExerciseDetailPage from "./pages/ExerciseDetailPage";
 import ChatPage from "./pages/ChatPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/mood-tracker" element={<MoodTrackerPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />
+          <Route path="/exercises/:id" element={<ExerciseDetailPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
