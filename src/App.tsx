@@ -10,6 +10,8 @@ import MoodTrackerPage from "./pages/MoodTrackerPage";
 import ExercisesPage from "./pages/ExercisesPage";
 import ChatPage from "./pages/ChatPage";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +23,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/mood-tracker" element={<MoodTrackerPage />} />
           <Route path="/exercises" element={<ExercisesPage />} />

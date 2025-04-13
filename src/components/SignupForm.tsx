@@ -8,35 +8,46 @@ import Logo from "@/components/Logo";
 import { toast } from "sonner";
 import { Brain } from "lucide-react";
 
-const LoginForm = () => {
+const SignupForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    // Get existing users or initialize empty array
+    const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
     
-    // Check if credentials match
-    const user = users.find((u: {email: string, password: string}) => 
-      u.email === email && u.password === password
-    );
-    
-    setTimeout(() => {
-      if (user) {
-        // Store logged in user info
-        localStorage.setItem("user", JSON.stringify({ email }));
-        toast.success("Welcome to Mindease!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Invalid email or password");
-      }
+    // Check if email already exists
+    if (existingUsers.some((user: {email: string}) => user.email === email)) {
+      toast.error("Email already registered");
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    
+    // Simulate account creation
+    setTimeout(() => {
+      // Store user in localStorage
+      const newUser = { email, password, name };
+      existingUsers.push(newUser);
+      localStorage.setItem("users", JSON.stringify(existingUsers));
+      
+      toast.success("Account created successfully!");
+      navigate("/login");
+      setIsLoading(false);
+    }, 1500);
   };
 
   return (
@@ -44,14 +55,27 @@ const LoginForm = () => {
       <div className="w-full max-w-md space-y-8 animate-fade-in">
         <div className="flex flex-col items-center justify-center text-center">
           <Logo className="mb-6" />
-          <h2 className="text-3xl font-bold tracking-tight text-mindease">Welcome to Mindease</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-mindease">Join Mindease</h2>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Your companion for mental wellbeing
+            Create your account to start your wellness journey
           </p>
         </div>
         
         <div className="mt-8 bg-white p-8 shadow-md rounded-2xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                required
+                className="rounded-lg"
+              />
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -66,21 +90,26 @@ const LoginForm = () => {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <button
-                  type="button"
-                  className="text-xs text-mindease hover:text-mindease-mid"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Create a password"
+                required
+                className="rounded-lg"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
                 required
                 className="rounded-lg"
               />
@@ -94,21 +123,21 @@ const LoginForm = () => {
               {isLoading ? (
                 <span className="flex items-center">
                   <Brain className="mr-2 h-4 w-4 animate-pulse" />
-                  Signing in...
+                  Creating Account...
                 </span>
               ) : (
-                "Sign in"
+                "Sign up"
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Don't have an account? </span>
+            <span className="text-muted-foreground">Already have an account? </span>
             <button 
               className="font-medium text-mindease hover:text-mindease-mid"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate("/login")}
             >
-              Sign up
+              Sign in
             </button>
           </div>
         </div>
@@ -117,4 +146,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default SignupForm;
