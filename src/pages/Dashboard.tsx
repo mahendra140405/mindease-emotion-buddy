@@ -7,7 +7,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import MoodOverview from "@/components/dashboard/MoodOverview";
 import ExerciseCard from "@/components/dashboard/ExerciseCard";
 import { 
-  Users, Activity, Brain, Clock, MessageCircle, 
+  Activity, Brain, Clock, MessageCircle, 
   Wind, Flower, Music, Heart 
 } from "lucide-react";
 
@@ -33,13 +33,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Visitors"
-            value="2,345"
-            icon={<Users className="h-4 w-4" />}
-            description="+12% from last month"
-          />
+        <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Avg. Mood Score"
             value="3.8"
