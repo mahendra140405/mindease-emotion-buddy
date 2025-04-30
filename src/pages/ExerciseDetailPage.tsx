@@ -3,8 +3,8 @@ import NavBar from "@/components/NavBar";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Wind, Brain, Heart, Music, Flower, Moon } from "lucide-react";
-import { ArrowLeft } from "lucide-react";
+import { Wind, Brain, Heart, Music, Flower, Moon, ArrowLeft, Check, Timer } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Exercise {
   id: number;
@@ -151,6 +151,10 @@ const ExerciseDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [exercise, setExercise] = useState<Exercise | null>(null);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const { toast } = useToast();
   
   useEffect(() => {
     const user = localStorage.getItem("user");
@@ -172,17 +176,63 @@ const ExerciseDetailPage = () => {
     }
   }, [id, navigate]);
 
+  useEffect(() => {
+    // Timer for exercise session
+    let timer: number | null = null;
+    
+    if (sessionStarted && timeRemaining > 0) {
+      timer = window.setInterval(() => {
+        setTimeRemaining((prev) => prev - 1);
+      }, 1000);
+    } else if (sessionStarted && timeRemaining === 0 && currentStep < (exercise?.steps.length || 0) - 1) {
+      // Move to next step when time is up
+      setCurrentStep((prev) => prev + 1);
+      setTimeRemaining(30); // Reset timer for next step
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [sessionStarted, timeRemaining, currentStep, exercise]);
+
   const handleBack = () => {
-    navigate("/exercises");
+    if (sessionStarted) {
+      // Confirm before leaving exercise session
+      const confirmed = window.confirm("Are you sure you want to end your exercise session?");
+      if (confirmed) {
+        setSessionStarted(false);
+      }
+    } else {
+      navigate("/exercises");
+    }
+  };
+
+  const startExerciseSession = () => {
+    setSessionStarted(true);
+    setCurrentStep(0);
+    setTimeRemaining(30); // Start with 30 seconds per step
+    toast({
+      title: "Exercise session started",
+      description: "Follow each step to complete your session",
+    });
+  };
+
+  const completeExercise = () => {
+    setSessionStarted(false);
+    toast({
+      title: "Exercise completed!",
+      description: "Great job completing your exercise session",
+      variant: "success",
+    });
   };
 
   if (!exercise) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <NavBar />
         <div className="container mx-auto py-8">
           <div className="flex justify-center items-center h-64">
-            <p className="text-lg">Loading exercise...</p>
+            <p className="text-lg dark:text-white">Loading exercise...</p>
           </div>
         </div>
       </div>
@@ -190,57 +240,113 @@ const ExerciseDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <NavBar />
       <div className="container mx-auto py-8 px-4 animate-fade-in">
         <Button 
           variant="ghost" 
           onClick={handleBack} 
-          className="mb-6 flex items-center text-mindease"
+          className="mb-6 flex items-center text-mindease dark:text-white"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Exercises
+          {sessionStarted ? "End Session" : "Back to Exercises"}
         </Button>
         
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center mb-6">
-            <div className="bg-mindease-light p-3 rounded-full mr-4 text-mindease">
-              {exercise.icon}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{exercise.title}</h1>
-              <p className="text-muted-foreground">{exercise.duration} • {exercise.category}</p>
-            </div>
-          </div>
-          
-          <p className="text-gray-700 mb-6">{exercise.description}</p>
-          
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-3">How to Practice</h2>
-              <ol className="space-y-2 list-decimal list-inside">
-                {exercise.steps.map((step, index) => (
-                  <li key={index} className="text-gray-700">{step}</li>
-                ))}
-              </ol>
+        {sessionStarted ? (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm animate-fade-in">
+            <div className="flex items-center mb-6">
+              <div className="bg-mindease-light dark:bg-mindease-dark p-3 rounded-full mr-4 text-mindease dark:text-white">
+                {exercise.icon}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold dark:text-white">{exercise.title}</h1>
+                <p className="text-muted-foreground">Step {currentStep + 1} of {exercise.steps.length}</p>
+              </div>
             </div>
             
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Benefits</h2>
-              <ul className="space-y-2 list-disc list-inside">
-                {exercise.benefits.map((benefit, index) => (
-                  <li key={index} className="text-gray-700">{benefit}</li>
-                ))}
-              </ul>
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center">
+                <Timer className="h-5 w-5 mr-2 text-mindease" />
+                <span className="text-xl font-semibold">{timeRemaining}s</span>
+              </div>
+              <div className="bg-gray-100 dark:bg-gray-700 w-1/2 h-2 rounded-full">
+                <div 
+                  className="bg-mindease h-2 rounded-full" 
+                  style={{ 
+                    width: `${(currentStep / exercise.steps.length) * 100}%` 
+                  }}
+                />
+              </div>
             </div>
             
-            <div className="pt-4">
-              <Button className="w-full bg-mindease hover:bg-mindease-mid">
-                Start Exercise Session
-              </Button>
+            <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h2 className="text-xl font-semibold mb-2 dark:text-white">Current Step</h2>
+              <p className="text-gray-700 dark:text-gray-200 text-lg">{exercise.steps[currentStep]}</p>
+            </div>
+            
+            <div className="pt-4 flex justify-end">
+              {currentStep === exercise.steps.length - 1 ? (
+                <Button onClick={completeExercise} className="bg-green-600 hover:bg-green-700 flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  Complete Exercise
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => {
+                    setCurrentStep((prev) => prev + 1);
+                    setTimeRemaining(30);
+                  }} 
+                  className="bg-mindease hover:bg-mindease-mid"
+                >
+                  Next Step
+                </Button>
+              )}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+            <div className="flex items-center mb-6">
+              <div className="bg-mindease-light dark:bg-mindease-dark p-3 rounded-full mr-4 text-mindease dark:text-white">
+                {exercise.icon}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold dark:text-white">{exercise.title}</h1>
+                <p className="text-muted-foreground dark:text-gray-400">{exercise.duration} • {exercise.category}</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-700 dark:text-gray-300 mb-6">{exercise.description}</p>
+            
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold mb-3 dark:text-white">How to Practice</h2>
+                <ol className="space-y-2 list-decimal list-inside">
+                  {exercise.steps.map((step, index) => (
+                    <li key={index} className="text-gray-700 dark:text-gray-300">{step}</li>
+                  ))}
+                </ol>
+              </div>
+              
+              <div>
+                <h2 className="text-xl font-semibold mb-3 dark:text-white">Benefits</h2>
+                <ul className="space-y-2 list-disc list-inside">
+                  {exercise.benefits.map((benefit, index) => (
+                    <li key={index} className="text-gray-700 dark:text-gray-300">{benefit}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="pt-4">
+                <Button 
+                  onClick={startExerciseSession} 
+                  className="w-full bg-mindease hover:bg-mindease-mid"
+                >
+                  Start Exercise Session
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
