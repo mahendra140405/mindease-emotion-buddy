@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Info, Bot, User, ArrowUpCircle } from "lucide-react";
+import { Send, Brain, Info, Bot, User, ArrowUpCircle, LineChart, ExternalLink, AlertTriangle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -13,6 +13,49 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+
+// Sentiment analysis function (adapted from TextBlob functionality)
+const analyzeSentiment = (text: string): { sentiment: string; polarity: number } => {
+  // Simple word-based sentiment analysis
+  const positiveWords = ['happy', 'good', 'great', 'excellent', 'wonderful', 'love', 'like', 'enjoy', 'positive', 'joy', 'grateful', 'thankful', 'excited'];
+  const negativeWords = ['sad', 'bad', 'terrible', 'awful', 'hate', 'dislike', 'negative', 'anxious', 'worry', 'depressed', 'angry', 'upset', 'frustrated'];
+  
+  const lowerText = text.toLowerCase();
+  let positiveCount = 0;
+  let negativeCount = 0;
+  
+  positiveWords.forEach(word => {
+    if (lowerText.includes(word)) positiveCount++;
+  });
+  
+  negativeWords.forEach(word => {
+    if (lowerText.includes(word)) negativeCount++;
+  });
+  
+  const polarity = (positiveCount - negativeCount) / Math.max(1, positiveCount + negativeCount);
+  
+  let sentiment;
+  if (polarity > 0.5) sentiment = "Very Positive";
+  else if (polarity > 0.1) sentiment = "Positive";
+  else if (polarity >= -0.1 && polarity <= 0.1) sentiment = "Neutral";
+  else if (polarity >= -0.5) sentiment = "Negative";
+  else sentiment = "Very Negative";
+  
+  return { sentiment, polarity };
+};
+
+// Coping strategies based on sentiment
+const provideCopingStrategy = (sentiment: string): string => {
+  const strategies: Record<string, string> = {
+    "Very Positive": "Keep up the positive vibes! Consider sharing your good mood with others.",
+    "Positive": "It's great to see you're feeling positive. Keep doing what you're doing!",
+    "Neutral": "Feeling neutral is okay. Consider engaging in activities you enjoy.",
+    "Negative": "It seems you're feeling down. Try taking a break and doing something relaxing.",
+    "Very Negative": "I'm sorry to hear that you're feeling very negative. Consider talking to a friend or seeking professional help."
+  };
+  
+  return strategies[sentiment] || "Keep going, you're doing great!";
+};
 
 // Enhanced response generator with more mental health focus
 const getMentalHealthResponse = (message: string) => {
@@ -112,11 +155,20 @@ const getMentalHealthResponse = (message: string) => {
   };
 };
 
+interface MoodData {
+  message: string;
+  sentiment: string;
+  polarity: number;
+  timestamp: Date;
+}
+
 interface Message {
   id: string;
   text: string;
   sender: "user" | "bot";
   emotion?: string;
+  sentiment?: string;
+  polarity?: number;
   timestamp: Date;
 }
 
@@ -133,6 +185,10 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [longMessage, setLongMessage] = useState(false);
+  const [showMoodChart, setShowMoodChart] = useState(false);
+  const [showResources, setShowResources] = useState(false);
+  const [moodData, setMoodData] = useState<MoodData[]>([]);
+  const [lastCopingStrategy, setLastCopingStrategy] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -144,6 +200,8 @@ const ChatInterface = () => {
   useEffect(() => {
     // Check if localStorage has previous chat history
     const savedMessages = localStorage.getItem("chatHistory");
+    const savedMoodData = localStorage.getItem("moodData");
+    
     if (savedMessages) {
       try {
         const parsedMessages = JSON.parse(savedMessages);
@@ -155,6 +213,19 @@ const ChatInterface = () => {
         setMessages(messagesWithDates);
       } catch (error) {
         console.error("Failed to parse chat history:", error);
+      }
+    }
+    
+    if (savedMoodData) {
+      try {
+        const parsedMoodData = JSON.parse(savedMoodData);
+        const moodDataWithDates = parsedMoodData.map((mood: any) => ({
+          ...mood,
+          timestamp: new Date(mood.timestamp)
+        }));
+        setMoodData(moodDataWithDates);
+      } catch (error) {
+        console.error("Failed to parse mood data:", error);
       }
     }
   }, []);
@@ -170,20 +241,49 @@ const ChatInterface = () => {
       console.error("Failed to save chat history:", error);
     }
   };
+  
+  const saveMoodDataToLocalStorage = (updatedMoodData: MoodData[]) => {
+    try {
+      localStorage.setItem("moodData", JSON.stringify(updatedMoodData));
+    } catch (error) {
+      console.error("Failed to save mood data:", error);
+    }
+  };
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
+
+    // Analyze sentiment
+    const { sentiment, polarity } = analyzeSentiment(inputValue);
+    
+    // Get coping strategy
+    const copingStrategy = provideCopingStrategy(sentiment);
+    setLastCopingStrategy(copingStrategy);
 
     const userMessage: Message = {
       id: Date.now().toString(),
       text: inputValue,
       sender: "user",
+      sentiment,
+      polarity,
       timestamp: new Date(),
     };
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     saveMessagesToLocalStorage(updatedMessages);
+    
+    // Update mood data
+    const newMoodData: MoodData = {
+      message: inputValue,
+      sentiment,
+      polarity,
+      timestamp: new Date(),
+    };
+    
+    const updatedMoodData = [...moodData, newMoodData];
+    setMoodData(updatedMoodData);
+    saveMoodDataToLocalStorage(updatedMoodData);
     
     setInputValue("");
     setIsTyping(true);
@@ -230,6 +330,23 @@ const ChatInterface = () => {
     }
   };
 
+  const getSentimentColor = (sentiment?: string) => {
+    switch (sentiment) {
+      case "Very Positive":
+        return "text-green-600";
+      case "Positive":
+        return "text-green-500";
+      case "Neutral":
+        return "text-gray-500";
+      case "Negative":
+        return "text-orange-500";
+      case "Very Negative":
+        return "text-red-600";
+      default:
+        return "text-gray-500";
+    }
+  };
+
   const clearChat = () => {
     const confirmClear = window.confirm("Are you sure you want to clear your chat history?");
     if (confirmClear) {
@@ -255,6 +372,134 @@ const ChatInterface = () => {
       }
     }, 0);
   };
+  
+  const toggleMoodChart = () => {
+    setShowMoodChart(!showMoodChart);
+    setShowResources(false);
+  };
+  
+  const toggleResources = () => {
+    setShowResources(!showResources);
+    setShowMoodChart(false);
+  };
+  
+  const renderMoodChart = () => {
+    if (moodData.length === 0) {
+      return <p className="text-center p-4 text-gray-500">No mood data available yet.</p>;
+    }
+    
+    const chartHeight = 150;
+    const chartWidth = moodData.length * 40;
+    
+    return (
+      <div className="p-4">
+        <div className="mb-4">
+          <h3 className="text-lg font-medium">Your Mood History</h3>
+          <p className="text-sm text-gray-500">This chart shows your emotional state over time based on our sentiment analysis.</p>
+        </div>
+        
+        <div className="relative h-[200px] w-full overflow-x-auto">
+          <div className="absolute inset-0" style={{ width: `${Math.max(100, chartWidth)}%` }}>
+            <div className="flex h-full items-end">
+              {moodData.map((data, index) => {
+                const barHeight = Math.abs(data.polarity) * chartHeight;
+                const isPositive = data.polarity >= 0;
+                
+                return (
+                  <div key={index} className="flex flex-col items-center mx-1 flex-1" title={`${data.message}: ${data.sentiment}`}>
+                    <div className="text-xs mb-1 truncate max-w-[60px]" style={{ color: isPositive ? 'green' : 'red' }}>
+                      {data.sentiment}
+                    </div>
+                    <div 
+                      className={`w-8 ${isPositive ? 'bg-green-400' : 'bg-red-400'} rounded-t`}
+                      style={{ height: `${barHeight}px` }}
+                    ></div>
+                    <div className="text-xs mt-1">
+                      {data.timestamp.toLocaleDateString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="absolute top-1/2 w-full h-[1px] bg-gray-300"></div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  const renderResources = () => {
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-4">Mental Health Resources</h3>
+        
+        <div className="space-y-4">
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              Immediate Help
+            </h4>
+            <ul className="mt-2 space-y-2 text-sm">
+              <li className="flex items-center justify-between">
+                <span>National Suicide Prevention Lifeline:</span>
+                <span className="font-medium">1-800-273-8255</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span>Crisis Text Line:</span>
+                <span className="font-medium">Text 'HELLO' to 741741</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <ExternalLink className="h-4 w-4 text-blue-500" />
+              Online Resources
+            </h4>
+            <ul className="mt-2 space-y-2 text-sm">
+              <li>
+                <a 
+                  href="https://www.mentalhealth.gov" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline flex items-center gap-1"
+                >
+                  MentalHealth.gov
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://www.nami.org" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline flex items-center gap-1"
+                >
+                  National Alliance on Mental Illness
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://www.psychologytoday.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline flex items-center gap-1"
+                >
+                  Psychology Today
+                </a>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
+            <p className="text-sm text-yellow-800">
+              <span className="font-medium">Data Privacy Note:</span> This application stores your chat and mood data locally on your device only. 
+              This data is not transmitted to any servers and is used solely to provide you with a better experience.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="mx-auto flex h-[calc(100vh-5rem)] max-w-4xl animate-fade-in flex-col p-4">
@@ -266,6 +511,24 @@ const ChatInterface = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleMoodChart}
+            className={showMoodChart ? "bg-mindease text-white" : ""}
+          >
+            <LineChart className="h-4 w-4 mr-1" />
+            Mood Tracker
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleResources}
+            className={showResources ? "bg-mindease text-white" : ""}
+          >
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Resources
+          </Button>
           <Button variant="outline" size="sm" onClick={clearChat}>
             Clear Chat
           </Button>
@@ -289,58 +552,82 @@ const ChatInterface = () => {
       </div>
 
       <Separator className="my-2" />
-
+      
       <div className="relative flex-1">
-        <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
-          <div className="space-y-4 p-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
+        {showMoodChart ? (
+          <div className="h-full overflow-auto bg-white rounded-lg border p-2">
+            {renderMoodChart()}
+          </div>
+        ) : showResources ? (
+          <div className="h-full overflow-auto bg-white rounded-lg border p-2">
+            {renderResources()}
+          </div>
+        ) : (
+          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
+            <div className="space-y-4 p-4">
+              {messages.map((message) => (
                 <div
-                  className={`flex max-w-[80%] items-start gap-3 rounded-lg border p-4 ${
-                    message.sender === "user"
-                      ? "bg-mindease text-white"
-                      : getEmotionColor(message.emotion)
+                  key={message.id}
+                  className={`flex ${
+                    message.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {message.sender === "bot" && (
+                  <div
+                    className={`flex max-w-[80%] items-start gap-3 rounded-lg border p-4 ${
+                      message.sender === "user"
+                        ? "bg-mindease text-white"
+                        : getEmotionColor(message.emotion)
+                    }`}
+                  >
+                    {message.sender === "bot" && (
+                      <Bot className="mt-1 h-5 w-5 text-mindease" />
+                    )}
+                    <div className="flex-1">
+                      <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
+                      {message.sentiment && (
+                        <p className={`text-xs mt-1 ${getSentimentColor(message.sentiment)}`}>
+                          Sentiment: {message.sentiment}
+                        </p>
+                      )}
+                      <p className="mt-1 text-right text-xs opacity-70">
+                        {message.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    {message.sender === "user" && (
+                      <User className="mt-1 h-5 w-5 text-white" />
+                    )}
+                  </div>
+                </div>
+              ))}
+  
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex max-w-[80%] items-start gap-3 rounded-lg border bg-mindease-light p-4">
                     <Bot className="mt-1 h-5 w-5 text-mindease" />
-                  )}
-                  <div className="flex-1">
-                    <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
-                    <p className="mt-1 text-right text-xs opacity-70">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  {message.sender === "user" && (
-                    <User className="mt-1 h-5 w-5 text-white" />
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="flex max-w-[80%] items-start gap-3 rounded-lg border bg-mindease-light p-4">
-                  <Bot className="mt-1 h-5 w-5 text-mindease" />
-                  <div className="flex space-x-2">
-                    <div className="h-3 w-3 animate-pulse rounded-full bg-mindease"></div>
-                    <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-200"></div>
-                    <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-500"></div>
+                    <div className="flex space-x-2">
+                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease"></div>
+                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-200"></div>
+                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-500"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+              )}
+              
+              {lastCopingStrategy && !isTyping && (
+                <div className="flex justify-center">
+                  <div className="max-w-[90%] rounded-lg border border-mindease bg-mindease-light p-3 text-sm text-center">
+                    <strong>Suggested Coping Strategy:</strong> {lastCopingStrategy}
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        )}
 
         <Button
           variant="outline"
