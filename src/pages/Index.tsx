@@ -1,19 +1,27 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Login from "@/pages/Login";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      navigate("/dashboard");
+    if (!loading) {
+      if (user) {
+        navigate("/dashboard");
+      } else {
+        navigate("/login");
+      }
     }
-  }, [navigate]);
+  }, [navigate, user, loading]);
 
-  return <Login />;
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="animate-pulse text-mindease text-xl">Loading...</div>
+    </div>
+  );
 };
 
 export default Index;
