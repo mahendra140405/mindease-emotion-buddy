@@ -5,38 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
-import { toast } from "sonner";
 import { Brain } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { signIn, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Check if credentials match
-    const user = users.find((u: {email: string, password: string}) => 
-      u.email === email && u.password === password
-    );
-    
-    setTimeout(() => {
-      if (user) {
-        // Store logged in user info
-        localStorage.setItem("user", JSON.stringify({ email }));
-        toast.success("Welcome to Mindease!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Invalid email or password");
-      }
-      setIsLoading(false);
-    }, 1000);
+    await signIn(email, password);
   };
 
   return (
@@ -89,9 +69,9 @@ const LoginForm = () => {
             <Button
               type="submit"
               className="w-full bg-mindease hover:bg-mindease-mid"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="flex items-center">
                   <Brain className="mr-2 h-4 w-4 animate-pulse" />
                   Signing in...

@@ -5,49 +5,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
-import { toast } from "sonner";
 import { Brain } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const SignupForm = () => {
   const navigate = useNavigate();
+  const { signUp, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validatePassword = () => {
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords don't match");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
-    if (password !== confirmPassword) {
-      toast.error("Passwords don't match");
+    if (!validatePassword()) {
       return;
     }
     
-    setIsLoading(true);
-    
-    // Get existing users or initialize empty array
-    const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Check if email already exists
-    if (existingUsers.some((user: {email: string}) => user.email === email)) {
-      toast.error("Email already registered");
-      setIsLoading(false);
-      return;
-    }
-    
-    // Simulate account creation
-    setTimeout(() => {
-      // Store user in localStorage
-      const newUser = { email, password, name };
-      existingUsers.push(newUser);
-      localStorage.setItem("users", JSON.stringify(existingUsers));
-      
-      toast.success("Account created successfully!");
-      navigate("/login");
-      setIsLoading(false);
-    }, 1500);
+    await signUp(email, password, name);
   };
 
   return (
@@ -109,18 +95,20 @@ const SignupForm = () => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                onBlur={validatePassword}
                 placeholder="Confirm your password"
                 required
                 className="rounded-lg"
               />
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
             </div>
 
             <Button
               type="submit"
               className="w-full bg-mindease hover:bg-mindease-mid"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="flex items-center">
                   <Brain className="mr-2 h-4 w-4 animate-pulse" />
                   Creating Account...
