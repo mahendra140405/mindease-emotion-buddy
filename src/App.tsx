@@ -58,7 +58,7 @@ const AppRoutes = () => (
     <Route path="/mood-tracker" element={<ProtectedRoute><MoodTrackerPage /></ProtectedRoute>} />
     <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
     <Route path="/exercises/:id" element={<ProtectedRoute><ExerciseDetailPage /></ProtectedRoute>} />
-    <Route path="/chat" element={<ChatPage />} />
+    <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

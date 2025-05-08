@@ -15,6 +15,10 @@ const ChatPage = () => {
     );
   }
 
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <NavBar />
