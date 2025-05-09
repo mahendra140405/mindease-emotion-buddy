@@ -1,10 +1,9 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Info, Bot, User, ArrowUpCircle, LineChart, ExternalLink, AlertTriangle } from "lucide-react";
+import { Send, Brain, Info, Bot, User, ArrowUpCircle, LineChart, ExternalLink, AlertTriangle, Moon, Phone, Globe, UserRound, BookOpen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -13,6 +12,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { generateAIResponse } from "@/lib/supabase";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/context/AuthContext";
 
 // Sentiment analysis function (adapted from TextBlob functionality)
 const analyzeSentiment = (text: string): { sentiment: string; polarity: number } => {
@@ -57,104 +66,6 @@ const provideCopingStrategy = (sentiment: string): string => {
   return strategies[sentiment] || "Keep going, you're doing great!";
 };
 
-// Enhanced response generator with more mental health focus
-const getMentalHealthResponse = (message: string) => {
-  const lowercaseMsg = message.toLowerCase();
-  
-  // Check for anxiety
-  if (lowercaseMsg.includes("anxious") || lowercaseMsg.includes("anxiety") || lowercaseMsg.includes("worry") || lowercaseMsg.includes("panic")) {
-    return {
-      text: "It sounds like you might be experiencing anxiety. Remember that anxiety is a normal emotion that everyone feels at times. Try taking some deep breaths - inhale for 4 counts, hold for 2, and exhale for 6. Would you like to try one of our guided breathing exercises?",
-      emotion: "anxious",
-    };
-  }
-  
-  // Check for sadness/depression
-  if (
-    lowercaseMsg.includes("sad") || 
-    lowercaseMsg.includes("depress") || 
-    lowercaseMsg.includes("down") ||
-    lowercaseMsg.includes("hopeless") ||
-    lowercaseMsg.includes("empty")
-  ) {
-    return {
-      text: "I'm sorry to hear you're feeling down. Depression and sadness are common experiences, but you don't have to face them alone. Have you spoken to someone you trust about how you're feeling? Sometimes sharing our feelings can help lighten the load. Remember that professional help is also available if needed.",
-      emotion: "sad",
-    };
-  }
-  
-  // Check for stress
-  if (lowercaseMsg.includes("stress") || lowercaseMsg.includes("overwhelm") || lowercaseMsg.includes("pressure")) {
-    return {
-      text: "It sounds like you're feeling overwhelmed. Stress is your body's response to high-pressure situations. Try breaking down what's causing your stress into smaller, manageable parts. Our progressive muscle relaxation exercise might help you release physical tension. Remember to take breaks and practice self-care.",
-      emotion: "stressed",
-    };
-  }
-  
-  // Check for sleep issues
-  if (lowercaseMsg.includes("sleep") || lowercaseMsg.includes("insomnia") || lowercaseMsg.includes("tired") || lowercaseMsg.includes("rest")) {
-    return {
-      text: "Sleep problems can significantly impact mental health. Try establishing a regular sleep schedule, creating a relaxing bedtime routine, and limiting screen time before bed. Our sleep meditation exercises might help you fall asleep more easily. Would you like to try one?",
-      emotion: "tired",
-    };
-  }
-  
-  // Check for self-esteem issues
-  if (lowercaseMsg.includes("worthless") || lowercaseMsg.includes("hate myself") || lowercaseMsg.includes("not good enough") || lowercaseMsg.includes("failure")) {
-    return {
-      text: "I'm hearing that you might be struggling with self-esteem. Remember that your worth isn't determined by achievements or others' opinions. You are inherently valuable. Try practicing self-compassion - speak to yourself as you would to a good friend. Would you like to explore some self-compassion exercises?",
-      emotion: "sad",
-    };
-  }
-  
-  // Check for trauma
-  if (lowercaseMsg.includes("trauma") || lowercaseMsg.includes("ptsd") || lowercaseMsg.includes("flashback") || lowercaseMsg.includes("something bad happened")) {
-    return {
-      text: "Trauma can have a profound impact on mental wellbeing. If you're experiencing symptoms related to trauma, know that healing is possible. Grounding techniques can help during difficult moments. For example, try naming 5 things you can see, 4 things you can touch, 3 things you can hear, 2 things you can smell, and 1 thing you can taste.",
-      emotion: "anxious",
-    };
-  }
-  
-  // Check for questions about therapy
-  if (lowercaseMsg.includes("therapy") || lowercaseMsg.includes("counseling") || lowercaseMsg.includes("therapist") || lowercaseMsg.includes("psychiatrist")) {
-    return {
-      text: "Therapy can be a valuable resource for mental health support. Different types include cognitive-behavioral therapy (CBT), psychodynamic therapy, and mindfulness-based approaches. A mental health professional can help determine what might be most beneficial for your specific needs. Would you like to learn more about finding a therapist?",
-      emotion: "neutral",
-    };
-  }
-  
-  // Check for questions about mental health
-  if (lowercaseMsg.includes("mental health") || lowercaseMsg.includes("mental illness") || lowercaseMsg.includes("mental wellbeing")) {
-    return {
-      text: "Mental health is just as important as physical health! Taking care of your mental wellbeing can include therapy, mindfulness practices, regular exercise, adequate sleep, and social connection. Is there a specific aspect of mental health you'd like to know more about?",
-      emotion: "neutral",
-    };
-  }
-  
-  // Check for gratitude and positive emotions
-  if (lowercaseMsg.includes("grateful") || lowercaseMsg.includes("thankful") || lowercaseMsg.includes("blessed") || lowercaseMsg.includes("happy")) {
-    return {
-      text: "It's wonderful to hear you're experiencing positive emotions! Practicing gratitude regularly can boost mental wellbeing. Consider keeping a gratitude journal or taking a moment each day to reflect on things you appreciate. Would you like to share what you're grateful for today?",
-      emotion: "neutral",
-    };
-  }
-  
-  // Check for greeting or how are you
-  if (lowercaseMsg.includes("hello") || lowercaseMsg.includes("hi") || 
-      lowercaseMsg.includes("hey") || lowercaseMsg.includes("how are you")) {
-    return {
-      text: "Hello! I'm Mindease, your AI mental health companion. I'm here to support you and provide resources for your mental wellbeing. How are you feeling today? Remember, I'm here to listen without judgment.",
-      emotion: "neutral",
-    };
-  }
-  
-  // Default response
-  return {
-    text: "Thank you for sharing. I'm here to support you with your mental wellbeing. Would you like to try one of our exercises, track your mood, or continue chatting about how you're feeling? Remember that while I'm here to help, I'm not a replacement for professional mental health support.",
-    emotion: "neutral",
-  };
-};
-
 interface MoodData {
   message: string;
   sentiment: string;
@@ -170,7 +81,67 @@ interface Message {
   sentiment?: string;
   polarity?: number;
   timestamp: Date;
+  language?: string;
 }
+
+const emergencyContacts = [
+  { name: "National Suicide Prevention Lifeline", number: "1-800-273-8255" },
+  { name: "Crisis Text Line", number: "Text HOME to 741741" },
+  { name: "National Domestic Violence Hotline", number: "1-800-799-7233" },
+  { name: "National Mental Health Helpline", number: "1-800-662-4357" },
+  { name: "Indian Mental Health Hotline", number: "1800-599-0019" },
+];
+
+const languageOptions = [
+  { value: "en", label: "English" },
+  { value: "hi", label: "Hindi" },
+  { value: "te", label: "Telugu" },
+  { value: "ta", label: "Tamil" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+];
+
+const mentalhealthTopics = [
+  { value: "general", label: "General Support" },
+  { value: "anxiety", label: "Anxiety" },
+  { value: "depression", label: "Depression" },
+  { value: "stress", label: "Stress Management" },
+  { value: "sleep", label: "Sleep Issues" },
+  { value: "relationships", label: "Relationships" },
+];
+
+const recommendedArticles = [
+  {
+    title: "5 Ways to Manage Anxiety",
+    url: "#",
+    topics: ["anxiety", "stress"],
+  },
+  {
+    title: "Understanding Depression: Signs and Support",
+    url: "#",
+    topics: ["depression"],
+  },
+  {
+    title: "How to Improve Your Sleep Quality",
+    url: "#",
+    topics: ["sleep"],
+  },
+  {
+    title: "Building Healthy Relationships",
+    url: "#",
+    topics: ["relationships"],
+  },
+  {
+    title: "Mindfulness Techniques for Daily Life",
+    url: "#",
+    topics: ["stress", "anxiety", "general"],
+  },
+  {
+    title: "Recognizing Burnout and Recovery Strategies",
+    url: "#",
+    topics: ["stress", "general"],
+  }
+];
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -187,11 +158,19 @@ const ChatInterface = () => {
   const [longMessage, setLongMessage] = useState(false);
   const [showMoodChart, setShowMoodChart] = useState(false);
   const [showResources, setShowResources] = useState(false);
+  const [showEmergencySupport, setShowEmergencySupport] = useState(false);
   const [moodData, setMoodData] = useState<MoodData[]>([]);
   const [lastCopingStrategy, setLastCopingStrategy] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+  const [selectedTopic, setSelectedTopic] = useState<string>("general");
+  const [showRelaxation, setShowRelaxation] = useState(false);
+  const [storeLocally, setStoreLocally] = useState(true);
+  const [showArticles, setShowArticles] = useState(false);
+  const [suggestedArticles, setSuggestedArticles] = useState(recommendedArticles);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     scrollToBottom();
@@ -199,42 +178,46 @@ const ChatInterface = () => {
 
   useEffect(() => {
     // Check if localStorage has previous chat history
-    const savedMessages = localStorage.getItem("chatHistory");
-    const savedMoodData = localStorage.getItem("moodData");
-    
-    if (savedMessages) {
-      try {
-        const parsedMessages = JSON.parse(savedMessages);
-        // Convert string timestamps back to Date objects
-        const messagesWithDates = parsedMessages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-        setMessages(messagesWithDates);
-      } catch (error) {
-        console.error("Failed to parse chat history:", error);
+    if (storeLocally) {
+      const savedMessages = localStorage.getItem("chatHistory");
+      const savedMoodData = localStorage.getItem("moodData");
+      
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages);
+          // Convert string timestamps back to Date objects
+          const messagesWithDates = parsedMessages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          setMessages(messagesWithDates);
+        } catch (error) {
+          console.error("Failed to parse chat history:", error);
+        }
+      }
+      
+      if (savedMoodData) {
+        try {
+          const parsedMoodData = JSON.parse(savedMoodData);
+          const moodDataWithDates = parsedMoodData.map((mood: any) => ({
+            ...mood,
+            timestamp: new Date(mood.timestamp)
+          }));
+          setMoodData(moodDataWithDates);
+        } catch (error) {
+          console.error("Failed to parse mood data:", error);
+        }
       }
     }
-    
-    if (savedMoodData) {
-      try {
-        const parsedMoodData = JSON.parse(savedMoodData);
-        const moodDataWithDates = parsedMoodData.map((mood: any) => ({
-          ...mood,
-          timestamp: new Date(mood.timestamp)
-        }));
-        setMoodData(moodDataWithDates);
-      } catch (error) {
-        console.error("Failed to parse mood data:", error);
-      }
-    }
-  }, []);
+  }, [storeLocally]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const saveMessagesToLocalStorage = (updatedMessages: Message[]) => {
+    if (!storeLocally) return;
+    
     try {
       localStorage.setItem("chatHistory", JSON.stringify(updatedMessages));
     } catch (error) {
@@ -243,6 +226,8 @@ const ChatInterface = () => {
   };
   
   const saveMoodDataToLocalStorage = (updatedMoodData: MoodData[]) => {
+    if (!storeLocally) return;
+    
     try {
       localStorage.setItem("moodData", JSON.stringify(updatedMoodData));
     } catch (error) {
@@ -250,7 +235,26 @@ const ChatInterface = () => {
     }
   };
 
-  const handleSend = () => {
+  const translateText = async (text: string, targetLanguage: string) => {
+    if (targetLanguage === 'en') return text;
+    
+    // In a real app, you would use a translation API
+    // This is a simple mock implementation
+    const translations: Record<string, Record<string, string>> = {
+      hi: {
+        "Hi there! I'm your Mindease companion. How are you feeling today?": "नमस्ते! मैं आपका Mindease साथी हूँ। आज आप कैसा महसूस कर रहे हैं?",
+        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "साझा करने के लिए धन्यवाद। मैं आपके मानसिक स्वास्थ्य का समर्थन करने के लिए यहां हूं।"
+      },
+      te: {
+        "Hi there! I'm your Mindease companion. How are you feeling today?": "నమస్కారం! నేను మీ Mindease సహచరుడిని. ఈరోజు మీరు ఎలా అనుభవిస్తున్నారు?",
+        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "పంచుకున్నందుకు ధన్యవాదాలు. మీ మానసిక ఆరోగ్యానికి మద్దతుగా నేను ఇక్కడ ఉన్నాను."
+      }
+    };
+    
+    return translations[targetLanguage]?.[text] || text;
+  };
+
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
     // Analyze sentiment
@@ -267,6 +271,7 @@ const ChatInterface = () => {
       sentiment,
       polarity,
       timestamp: new Date(),
+      language: selectedLanguage
     };
 
     const updatedMessages = [...messages, userMessage];
@@ -289,23 +294,78 @@ const ChatInterface = () => {
     setIsTyping(true);
     setLongMessage(false);
 
-    // Simulate response delay (1.5-3 seconds)
-    const responseDelay = 1500 + Math.random() * 1500;
-    setTimeout(() => {
-      const response = getMentalHealthResponse(userMessage.text);
+    try {
+      // Get AI response
+      const aiResponse = await generateAIResponse(inputValue);
+      
+      // Update recommended articles based on user message
+      updateSuggestedArticles(inputValue);
+      
+      // Check if sentiment is very negative
+      if (polarity < -0.3) {
+        // Show suggestion for breathing exercise or resources
+        setTimeout(() => {
+          toast.info(
+            "It seems you may be feeling low. Would you like to try a breathing exercise or check our resources?",
+            {
+              action: {
+                label: "Show Resources",
+                onClick: () => setShowResources(true),
+              },
+            }
+          );
+        }, 1500);
+      }
+      
+      // Translate response if needed
+      let responseText = aiResponse.text;
+      if (selectedLanguage !== 'en') {
+        responseText = await translateText(responseText, selectedLanguage);
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response.text,
+        text: responseText,
         sender: "bot",
-        emotion: response.emotion,
+        emotion: aiResponse.emotion,
         timestamp: new Date(),
+        language: selectedLanguage
       };
 
       const finalMessages = [...updatedMessages, botMessage];
       setMessages(finalMessages);
       saveMessagesToLocalStorage(finalMessages);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      
+      // Fallback response
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm having trouble connecting right now. Can we try again in a moment?",
+        sender: "bot",
+        emotion: "neutral",
+        timestamp: new Date(),
+        language: selectedLanguage
+      };
+      
+      const finalMessages = [...updatedMessages, fallbackMessage];
+      setMessages(finalMessages);
+      saveMessagesToLocalStorage(finalMessages);
+    } finally {
       setIsTyping(false);
-    }, responseDelay);
+    }
+  };
+
+  const updateSuggestedArticles = (message: string) => {
+    const lowerMessage = message.toLowerCase();
+    const filtered = recommendedArticles.filter(article => {
+      return article.topics.some(topic => 
+        lowerMessage.includes(topic) || 
+        (selectedTopic !== 'general' && topic === selectedTopic)
+      );
+    });
+    
+    setSuggestedArticles(filtered.length > 0 ? filtered : recommendedArticles.slice(0, 3));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -376,11 +436,58 @@ const ChatInterface = () => {
   const toggleMoodChart = () => {
     setShowMoodChart(!showMoodChart);
     setShowResources(false);
+    setShowEmergencySupport(false);
+    setShowRelaxation(false);
+    setShowArticles(false);
   };
   
   const toggleResources = () => {
     setShowResources(!showResources);
     setShowMoodChart(false);
+    setShowEmergencySupport(false);
+    setShowRelaxation(false);
+    setShowArticles(false);
+  };
+
+  const toggleEmergencySupport = () => {
+    setShowEmergencySupport(!showEmergencySupport);
+    setShowMoodChart(false);
+    setShowResources(false);
+    setShowRelaxation(false);
+    setShowArticles(false);
+  };
+
+  const toggleRelaxation = () => {
+    setShowRelaxation(!showRelaxation);
+    setShowMoodChart(false);
+    setShowResources(false);
+    setShowEmergencySupport(false);
+    setShowArticles(false);
+  };
+
+  const toggleArticles = () => {
+    setShowArticles(!showArticles);
+    setShowMoodChart(false);
+    setShowResources(false);
+    setShowEmergencySupport(false);
+    setShowRelaxation(false);
+  };
+
+  const toggleStorageMode = () => {
+    if (storeLocally) {
+      const confirmChange = window.confirm(
+        "Switching to server storage mode will upload your conversation data to our servers. Do you want to proceed?"
+      );
+      if (!confirmChange) return;
+    } else {
+      toast.success("Switched to local storage mode. Your data stays on your device.");
+    }
+    setStoreLocally(!storeLocally);
+  };
+  
+  const alertGuardian = () => {
+    // In a real app, this would send an alert to a pre-configured contact
+    toast.info("In a real app, this would alert your emergency contact. This is just a demo.");
   };
   
   const renderMoodChart = () => {
@@ -501,6 +608,216 @@ const ChatInterface = () => {
     );
   };
 
+  const renderEmergencySupport = () => {
+    return (
+      <div className="p-4">
+        <div className="mb-4">
+          <h3 className="text-xl font-medium text-red-600 flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            Emergency Support Contacts
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            If you're experiencing a mental health crisis, please don't hesitate to reach out for help.
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {emergencyContacts.map((contact, index) => (
+            <div 
+              key={index}
+              className="flex justify-between items-center p-3 bg-white rounded-lg border border-red-100 hover:bg-red-50 transition-colors"
+            >
+              <div>
+                <p className="font-medium">{contact.name}</p>
+                <p className="text-red-600 font-medium">{contact.number}</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-red-200 hover:bg-red-100 hover:text-red-800"
+                onClick={() => {
+                  // In a real app, this would initiate a call
+                  toast.info(`In a real app, this would call ${contact.number}. This is just a demo.`);
+                }}
+              >
+                Call Now
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+          <h4 className="font-medium flex items-center gap-2 text-red-700 mb-2">
+            <AlertTriangle className="h-4 w-4" />
+            Alert a Guardian or Friend
+          </h4>
+          <p className="text-sm text-gray-700 mb-3">
+            With your consent, we can alert a pre-configured emergency contact when you're in distress.
+          </p>
+          <div className="flex justify-between items-center">
+            <Button 
+              variant="destructive"
+              size="sm"
+              onClick={alertGuardian}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Alert My Emergency Contact
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toast.info("In a real app, this would let you manage your emergency contacts.")}
+            >
+              Manage Contacts
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRelaxation = () => {
+    const relaxationOptions = [
+      { name: "Guided Breathing", duration: "5 min", icon: "🫁" },
+      { name: "Rain Sounds", duration: "15 min", icon: "🌧️" },
+      { name: "Forest Ambience", duration: "30 min", icon: "🌳" },
+      { name: "Deep Sleep Music", duration: "1 hour", icon: "🌙" },
+      { name: "Ocean Waves", duration: "20 min", icon: "🌊" },
+      { name: "Meditation Guide", duration: "10 min", icon: "🧘" },
+    ];
+
+    return (
+      <div className="p-4">
+        <div className="mb-4">
+          <h3 className="text-xl font-medium text-purple-600 flex items-center gap-2">
+            <Moon className="h-5 w-5" />
+            Sleep & Relaxation
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Discover calming sounds and guided meditations to help you relax and sleep better.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {relaxationOptions.map((option, index) => (
+            <button 
+              key={index}
+              className="p-4 bg-white rounded-lg border border-purple-100 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-2 text-center"
+              onClick={() => {
+                toast.info(`Playing ${option.name} for ${option.duration}. (Demo)`, {
+                  description: "In a full app, audio would start playing."
+                });
+              }}
+            >
+              <span className="text-2xl">{option.icon}</span>
+              <div>
+                <p className="font-medium">{option.name}</p>
+                <p className="text-xs text-gray-500">{option.duration}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+          <h4 className="font-medium mb-2">Sleep Timer</h4>
+          <div className="flex items-center gap-2">
+            <Select defaultValue="15">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select duration" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 minutes</SelectItem>
+                <SelectItem value="15">15 minutes</SelectItem>
+                <SelectItem value="30">30 minutes</SelectItem>
+                <SelectItem value="60">60 minutes</SelectItem>
+                <SelectItem value="120">2 hours</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              onClick={() => toast.info("Timer set! Audio would automatically stop after the selected time.")}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Set Timer
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderArticles = () => {
+    return (
+      <div className="p-4">
+        <div className="mb-4">
+          <h3 className="text-xl font-medium text-blue-600 flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Recommended Articles
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Articles and resources tailored to your conversations and selected topics.
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {suggestedArticles.map((article, index) => (
+            <div 
+              key={index}
+              className="p-4 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors"
+            >
+              <h4 className="font-medium text-blue-800">{article.title}</h4>
+              <div className="flex gap-1 mt-1 mb-3">
+                {article.topics.map((topic, i) => (
+                  <span key={i} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-blue-600 border-blue-200"
+                onClick={() => {
+                  toast.info(`Opening article: ${article.title} (Demo)`);
+                }}
+              >
+                Read Article
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <h4 className="font-medium mb-2">Filter by Topic</h4>
+          <Select 
+            value={selectedTopic} 
+            onValueChange={(value) => {
+              setSelectedTopic(value);
+              if (value !== 'general') {
+                const filtered = recommendedArticles.filter(article => 
+                  article.topics.includes(value)
+                );
+                setSuggestedArticles(filtered.length > 0 ? filtered : recommendedArticles.slice(0, 3));
+              } else {
+                setSuggestedArticles(recommendedArticles.slice(0, 3));
+              }
+            }}
+          >
+            <SelectTrigger className="w-full mb-2">
+              <SelectValue placeholder="Select topic" />
+            </SelectTrigger>
+            <SelectContent>
+              {mentalhealthTopics.map((topic) => (
+                <SelectItem key={topic.value} value={topic.value}>
+                  {topic.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mx-auto flex h-[calc(100vh-5rem)] max-w-4xl animate-fade-in flex-col p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -510,7 +827,7 @@ const ChatInterface = () => {
             Your supportive AI companion for mental wellbeing
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           <Button 
             variant="outline" 
             size="sm" 
@@ -523,174 +840,46 @@ const ChatInterface = () => {
           <Button 
             variant="outline" 
             size="sm" 
+            onClick={toggleEmergencySupport}
+            className={showEmergencySupport ? "bg-red-600 text-white" : "text-red-600"}
+          >
+            <Phone className="h-4 w-4 mr-1" />
+            Emergency
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={toggleResources}
             className={showResources ? "bg-mindease text-white" : ""}
           >
             <ExternalLink className="h-4 w-4 mr-1" />
             Resources
           </Button>
-          <Button variant="outline" size="sm" onClick={clearChat}>
-            Clear Chat
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleRelaxation}
+            className={showRelaxation ? "bg-purple-600 text-white" : ""}
+          >
+            <Moon className="h-4 w-4 mr-1" />
+            Sleep & Relax
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={toggleArticles}
+            className={showArticles ? "bg-blue-600 text-white" : ""}
+          >
+            <BookOpen className="h-4 w-4 mr-1" />
+            Articles
           </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Info className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs text-sm">
-                  This AI chatbot uses emotion detection to provide personalized
-                  mental health support. Your conversations are stored locally on your device
-                  and not sent to any server.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
-      <Separator className="my-2" />
-      
-      <div className="relative flex-1">
-        {showMoodChart ? (
-          <div className="h-full overflow-auto bg-white rounded-lg border p-2">
-            {renderMoodChart()}
-          </div>
-        ) : showResources ? (
-          <div className="h-full overflow-auto bg-white rounded-lg border p-2">
-            {renderResources()}
-          </div>
-        ) : (
-          <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
-            <div className="space-y-4 p-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={toggleStorageMode}
+                  className={storeLocally ? "bg-green-50" : ""}
                 >
-                  <div
-                    className={`flex max-w-[80%] items-start gap-3 rounded-lg border p-4 ${
-                      message.sender === "user"
-                        ? "bg-mindease text-white"
-                        : getEmotionColor(message.emotion)
-                    }`}
-                  >
-                    {message.sender === "bot" && (
-                      <Bot className="mt-1 h-5 w-5 text-mindease" />
-                    )}
-                    <div className="flex-1">
-                      <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
-                      {message.sentiment && (
-                        <p className={`text-xs mt-1 ${getSentimentColor(message.sentiment)}`}>
-                          Sentiment: {message.sentiment}
-                        </p>
-                      )}
-                      <p className="mt-1 text-right text-xs opacity-70">
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                    {message.sender === "user" && (
-                      <User className="mt-1 h-5 w-5 text-white" />
-                    )}
-                  </div>
-                </div>
-              ))}
-  
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="flex max-w-[80%] items-start gap-3 rounded-lg border bg-mindease-light p-4">
-                    <Bot className="mt-1 h-5 w-5 text-mindease" />
-                    <div className="flex space-x-2">
-                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease"></div>
-                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-200"></div>
-                      <div className="h-3 w-3 animate-pulse rounded-full bg-mindease animation-delay-500"></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {lastCopingStrategy && !isTyping && (
-                <div className="flex justify-center">
-                  <div className="max-w-[90%] rounded-lg border border-mindease bg-mindease-light p-3 text-sm text-center">
-                    <strong>Suggested Coping Strategy:</strong> {lastCopingStrategy}
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-        )}
-
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute bottom-20 right-4 rounded-full bg-white shadow-md md:bottom-24"
-          onClick={scrollToBottom}
-        >
-          <ArrowUpCircle className="h-5 w-5 rotate-180" />
-        </Button>
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center gap-2">
-          {longMessage ? (
-            <Textarea
-              ref={textareaRef}
-              placeholder="Type your message (press Shift+Enter for new line)..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1 min-h-[80px] max-h-[200px]"
-            />
-          ) : (
-            <Input
-              placeholder="Type your message..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-          )}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleInputType}
-            title={longMessage ? "Switch to single line input" : "Switch to multi-line input"}
-            className="flex-shrink-0"
-          >
-            {longMessage ? (
-              <span className="text-xs">abc</span>
-            ) : (
-              <span className="text-xs">ABC</span>
-            )}
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isTyping}
-            className="bg-mindease flex-shrink-0"
-          >
-            {isTyping ? (
-              <Brain className="h-5 w-5 animate-pulse" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          If you're experiencing a mental health emergency, please call your
-          local emergency number or crisis hotline immediately.
-        </p>
-      </div>
-    </div>
-  );
-};
-
-export default ChatInterface;
+                  {storeLoc
