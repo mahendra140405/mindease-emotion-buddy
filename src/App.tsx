@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MoodTrackerPage from "./pages/MoodTrackerPage";
@@ -38,7 +38,7 @@ const ThemeInitializer = () => {
 
 // Protected route component that uses the useAuth hook
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = require('./context/AuthContext').useAuth();
+  const { user, loading } = useAuth();
   
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
