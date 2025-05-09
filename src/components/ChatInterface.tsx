@@ -373,7 +373,7 @@ const ChatInterface = () => {
         "I'm sorry to hear that you're feeling this way. Would you like to talk more about it?": "मुझे यह सुनकर दुख है कि आप ऐसा महसूस कर रहे हैं। क्या आप इसके बारे में और बात करना चाहेंगे?",
         "It seems like you've been having a difficult time. Remember that it's okay to ask for help.": "ऐसा लगता है कि आपका समय कठिन रहा है। याद रखें कि मदद मांगना ठीक है।",
         "What activities help you feel better when you're stressed?": "जब आप तनाव में होते हैं तो कौन सी गतिविधियां आपको बेहतर महसूस कराती हैं?",
-        "I'm having trouble connecting right now. Can we try again in a moment?": "मुझे अभी कनेक्ट करने में समस्या हो रही है। क्या हम थोड़ी देर में फिर से प्रयास कर सकते हैं?"
+        "I'm having trouble connecting right now. Can we try again in a moment?": "मुझ�� अभी कनेक्ट करने में समस्या हो रही है। क्या हम थोड़ी देर में फिर से प्रयास कर सकते हैं?"
       },
       te: {
         "Hi there! I'm your Mindease companion. How are you feeling today?": "నమస్కారం! నేను మీ Mindease సహచరుడిని. ఈరోజు మీరు ఎలా అనుభవిస్తున్నారు?",
@@ -405,7 +405,7 @@ const ChatInterface = () => {
       },
       te: {
         "positive": "అది మంచిది! మీరు ఇంకా చెప్పాలనుకుంటున్నారా?",
-        "neutral": "నేను అర్థం చేసుకుంటున్నాను. మీరు ఇంకేమైనా చెప్పాలనుకుంటున్నారా?",
+        "neutral": "నేను అర్థం చేసుకుంటున్నాను. మీరు ఇంకేమైనా చెప్పాలనుకుంటున్నాను?",
         "negative": "మీరు అలా భావిస్తున్నారని నాకు బాధగా ఉంది. నేను ఏదైనా సహాయం చేయగలనా?"
       },
       es: {
@@ -978,38 +978,40 @@ const ChatInterface = () => {
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <Select
-            value={selectedLanguage}
-            onValueChange={setSelectedLanguage}
-            className="w-24"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              {languageOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={selectedTopic}
-            onValueChange={setSelectedTopic}
-            className="w-24"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Topic" />
-            </SelectTrigger>
-            <SelectContent>
-              {mentalhealthTopics.map(topic => (
-                <SelectItem key={topic.value} value={topic.value}>
-                  {topic.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-24">
+            <Select
+              value={selectedLanguage}
+              onValueChange={setSelectedLanguage}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languageOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-24">
+            <Select
+              value={selectedTopic}
+              onValueChange={setSelectedTopic}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Topic" />
+              </SelectTrigger>
+              <SelectContent>
+                {mentalhealthTopics.map(topic => (
+                  <SelectItem key={topic.value} value={topic.value}>
+                    {topic.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={toggleInputType} className="bg-mindease-dark text-white">
             {longMessage ? "Shorter" : "Longer"}
           </Button>

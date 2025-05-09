@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
@@ -144,8 +145,19 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+// Modify the export to include Root with className support
+const SelectRoot = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root> & {
+    className?: string;
+  }
+>(({ className, ...props }, ref) => (
+  <SelectPrimitive.Root {...props} />
+))
+SelectRoot.displayName = "SelectRoot"
+
 export {
-  Select,
+  SelectRoot as Select,
   SelectGroup,
   SelectValue,
   SelectTrigger,
