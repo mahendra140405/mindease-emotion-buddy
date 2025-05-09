@@ -5,6 +5,9 @@ import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Check if we're using placeholders
+const isUsingPlaceholders = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
@@ -16,13 +19,41 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Mock user for development when using placeholders
+const mockUser = isUsingPlaceholders ? {
+  id: 'mock-user-id',
+  email: 'demo@example.com',
+  user_metadata: { name: 'Demo User' },
+  app_metadata: {},
+  aud: 'authenticated',
+  created_at: new Date().toISOString()
+} as User : null;
+
+// Mock session for development when using placeholders
+const mockSession = isUsingPlaceholders ? {
+  user: mockUser,
+  access_token: 'mock-access-token',
+  refresh_token: 'mock-refresh-token',
+  expires_in: 3600,
+  expires_at: Date.now() + 3600000,
+  token_type: 'bearer',
+  provider_token: null,
+  provider_refresh_token: null
+} as Session : null;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(isUsingPlaceholders ? mockUser : null);
+  const [session, setSession] = useState<Session | null>(isUsingPlaceholders ? mockSession : null);
+  const [loading, setLoading] = useState(!isUsingPlaceholders);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Skip real auth check if using placeholders
+    if (isUsingPlaceholders) {
+      setLoading(false);
+      return;
+    }
+
     // Check active sessions and sets the user
     const getSession = async () => {
       setLoading(true);
@@ -56,6 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      
+      if (isUsingPlaceholders) {
+        // Mock successful login in development
+        console.log('Mock: Signing in with', email);
+        setUser(mockUser);
+        setSession(mockSession);
+        toast.success('Signed in successfully (Demo Mode)');
+        navigate('/dashboard');
+        return;
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
@@ -76,6 +118,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, name: string) => {
     try {
       setLoading(true);
+      
+      if (isUsingPlaceholders) {
+        // Mock successful registration in development
+        console.log('Mock: Signing up with', email, 'and name', name);
+        toast.success('Account created successfully! (Demo Mode)');
+        navigate('/login');
+        return;
+      }
+      
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -102,6 +153,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      if (isUsingPlaceholders) {
+        // Mock sign out in development
+        console.log('Mock: Signing out');
+        setUser(null);
+        setSession(null);
+        navigate('/');
+        toast.success('Signed out successfully (Demo Mode)');
+        return;
+      }
+      
       await supabase.auth.signOut();
       navigate('/');
       toast.success('Signed out successfully');
