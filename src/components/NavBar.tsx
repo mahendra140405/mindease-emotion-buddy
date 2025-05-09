@@ -1,21 +1,22 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
-  BarChart,
-  Brain,
-  Home,
+  User,
   LogOut,
   Menu,
-  MessageCircle,
-  Moon,
-  Activity,
-  User,
   X,
-  Sun,
+  Home,
+  BarChart3,
+  Activity,
+  MessageSquare,
+  BookOpen
 } from "lucide-react";
 import Logo from "@/components/Logo";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
 const NavBar = () => {
@@ -24,6 +25,7 @@ const NavBar = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -83,7 +85,7 @@ const NavBar = () => {
     icon: React.ElementType;
     label: string;
   }) => (
-    <Link
+    <NavLink
       to={to}
       onClick={closeMenu}
       className={`flex items-center space-x-2 rounded-lg px-3 py-2 transition-colors ${
@@ -94,8 +96,36 @@ const NavBar = () => {
     >
       <Icon size={20} />
       <span>{label}</span>
-    </Link>
+    </NavLink>
   );
+
+  const navigationItems = [
+    {
+      name: "Home",
+      path: "/dashboard",
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      name: "Mood Tracker",
+      path: "/mood-tracker",
+      icon: <BarChart3 className="h-5 w-5" />,
+    },
+    {
+      name: "Exercises",
+      path: "/exercises",
+      icon: <Activity className="h-5 w-5" />,
+    },
+    {
+      name: "Chat",
+      path: "/chat",
+      icon: <MessageSquare className="h-5 w-5" />,
+    },
+    {
+      name: "Resources",
+      path: "/resources",
+      icon: <BookOpen className="h-5 w-5" />,
+    },
+  ];
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
@@ -106,10 +136,14 @@ const NavBar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex md:items-center md:space-x-4">
-          <NavItem to="/dashboard" icon={Home} label="Dashboard" />
-          <NavItem to="/mood-tracker" icon={Activity} label="Mood Tracker" />
-          <NavItem to="/exercises" icon={Brain} label="Exercises" />
-          <NavItem to="/chat" icon={MessageCircle} label="Chat" />
+          {navigationItems.map((item) => (
+            <NavItem
+              key={item.name}
+              to={item.path}
+              icon={item.icon}
+              label={item.name}
+            />
+          ))}
         </div>
 
         {/* Profile & Logout (Desktop) */}
@@ -166,10 +200,14 @@ const NavBar = () => {
             </div>
 
             <div className="space-y-2">
-              <NavItem to="/dashboard" icon={Home} label="Dashboard" />
-              <NavItem to="/mood-tracker" icon={Activity} label="Mood Tracker" />
-              <NavItem to="/exercises" icon={Brain} label="Exercises" />
-              <NavItem to="/chat" icon={MessageCircle} label="Chat" />
+              {navigationItems.map((item) => (
+                <NavItem
+                  key={item.name}
+                  to={item.path}
+                  icon={item.icon}
+                  label={item.name}
+                />
+              ))}
               
               <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
               

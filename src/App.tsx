@@ -12,6 +12,7 @@ import MoodTrackerPage from "./pages/MoodTrackerPage";
 import ExercisesPage from "./pages/ExercisesPage";
 import ExerciseDetailPage from "./pages/ExerciseDetailPage";
 import ChatPage from "./pages/ChatPage";
+import ResourcesPage from "./pages/ResourcesPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -60,6 +61,7 @@ const AppRoutes = () => (
     <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
     <Route path="/exercises/:id" element={<ProtectedRoute><ExerciseDetailPage /></ProtectedRoute>} />
     <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+    <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
