@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -12,11 +13,13 @@ import {
   BarChart3,
   Activity,
   MessageSquare,
-  BookOpen
+  BookOpen,
+  Sun,
+  Moon
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 
 const NavBar = () => {
@@ -25,7 +28,7 @@ const NavBar = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -103,27 +106,27 @@ const NavBar = () => {
     {
       name: "Home",
       path: "/dashboard",
-      icon: <Home className="h-5 w-5" />,
+      icon: Home,
     },
     {
       name: "Mood Tracker",
       path: "/mood-tracker",
-      icon: <BarChart3 className="h-5 w-5" />,
+      icon: BarChart3,
     },
     {
       name: "Exercises",
       path: "/exercises",
-      icon: <Activity className="h-5 w-5" />,
+      icon: Activity,
     },
     {
       name: "Chat",
       path: "/chat",
-      icon: <MessageSquare className="h-5 w-5" />,
+      icon: MessageSquare,
     },
     {
       name: "Resources",
       path: "/resources",
-      icon: <BookOpen className="h-5 w-5" />,
+      icon: BookOpen,
     },
   ];
 
