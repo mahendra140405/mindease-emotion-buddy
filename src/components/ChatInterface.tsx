@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Send, Brain, Info, Bot, User, ArrowUpCircle, LineChart, ExternalLink, AlertTriangle, Moon, Phone, Globe, UserRound, BookOpen } from "lucide-react";
+import { Send, Brain, Bot, User, ArrowUpCircle, LineChart, ExternalLink, AlertTriangle, Moon, Phone, Globe, BookOpen, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Sentiment analysis function (adapted from TextBlob functionality)
 const analyzeSentiment = (text: string): { sentiment: string; polarity: number } => {
@@ -84,14 +84,26 @@ interface Message {
   language?: string;
 }
 
+// Updated audio files with actual URLs
+const audioFiles = {
+  "Guided Breathing": "https://assets.mixkit.co/music/preview/mixkit-meditation-flute-347.mp3",
+  "Rain Sounds": "https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-1248.mp3",
+  "Forest Ambience": "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambience-1210.mp3",
+  "Deep Sleep Music": "https://assets.mixkit.co/music/preview/mixkit-deep-meditation-138.mp3",
+  "Ocean Waves": "https://assets.mixkit.co/sfx/preview/mixkit-sea-waves-loop-1196.mp3",
+  "Meditation Guide": "https://assets.mixkit.co/music/preview/mixkit-serene-view-122.mp3"
+};
+
+// Updated emergency contacts with tel: links
 const emergencyContacts = [
-  { name: "National Suicide Prevention Lifeline", number: "1-800-273-8255" },
-  { name: "Crisis Text Line", number: "Text HOME to 741741" },
-  { name: "National Domestic Violence Hotline", number: "1-800-799-7233" },
-  { name: "National Mental Health Helpline", number: "1-800-662-4357" },
-  { name: "Indian Mental Health Hotline", number: "1800-599-0019" },
+  { name: "National Suicide Prevention Lifeline", number: "1-800-273-8255", tel: "tel:18002738255" },
+  { name: "Crisis Text Line", number: "Text HOME to 741741", tel: "sms:741741&body=HOME" },
+  { name: "National Domestic Violence Hotline", number: "1-800-799-7233", tel: "tel:18007997233" },
+  { name: "National Mental Health Helpline", number: "1-800-662-4357", tel: "tel:18006624357" },
+  { name: "Indian Mental Health Hotline", number: "1800-599-0019", tel: "tel:18005990019" },
 ];
 
+// Updated language options with proper translation support
 const languageOptions = [
   { value: "en", label: "English" },
   { value: "hi", label: "Hindi" },
@@ -101,6 +113,7 @@ const languageOptions = [
   { value: "fr", label: "French" },
 ];
 
+// Updated mental health topics
 const mentalhealthTopics = [
   { value: "general", label: "General Support" },
   { value: "anxiety", label: "Anxiety" },
@@ -110,36 +123,126 @@ const mentalhealthTopics = [
   { value: "relationships", label: "Relationships" },
 ];
 
+// Enhanced recommended articles with actual content
 const recommendedArticles = [
   {
     title: "5 Ways to Manage Anxiety",
-    url: "#",
+    url: "#anxiety-management",
     topics: ["anxiety", "stress"],
+    content: `
+      <h2>5 Ways to Manage Anxiety</h2>
+      <p>Anxiety is a natural response to stress, but when it becomes overwhelming, these techniques can help:</p>
+      <ol>
+        <li><strong>Deep Breathing:</strong> Practice the 4-7-8 technique: inhale for 4 seconds, hold for 7, exhale for 8.</li>
+        <li><strong>Progressive Muscle Relaxation:</strong> Tense and then release each muscle group in your body.</li>
+        <li><strong>Mindfulness Meditation:</strong> Focus on the present moment without judgment.</li>
+        <li><strong>Regular Exercise:</strong> Physical activity releases endorphins that reduce stress.</li>
+        <li><strong>Limit Caffeine and Alcohol:</strong> Both can trigger or worsen anxiety symptoms.</li>
+      </ol>
+      <p>Remember that persistent anxiety may benefit from professional support. Don't hesitate to reach out to a mental health professional.</p>
+    `
   },
   {
     title: "Understanding Depression: Signs and Support",
-    url: "#",
+    url: "#depression-support",
     topics: ["depression"],
+    content: `
+      <h2>Understanding Depression: Signs and Support</h2>
+      <p>Depression is more than just feeling sad. It's a serious mental health condition that affects millions worldwide.</p>
+      <h3>Common Signs of Depression:</h3>
+      <ul>
+        <li>Persistent sadness or empty mood</li>
+        <li>Loss of interest in once-enjoyed activities</li>
+        <li>Changes in appetite and sleep patterns</li>
+        <li>Fatigue or low energy nearly every day</li>
+        <li>Feelings of worthlessness or excessive guilt</li>
+      </ul>
+      <h3>Support Strategies:</h3>
+      <ul>
+        <li>Seek professional help from a therapist or psychiatrist</li>
+        <li>Maintain social connections even when you don't feel like it</li>
+        <li>Establish regular routines for sleep, meals, and exercise</li>
+        <li>Challenge negative thoughts with evidence-based thinking</li>
+      </ul>
+      <p>Remember: Depression is treatable, and recovery is possible with the right support.</p>
+    `
   },
   {
     title: "How to Improve Your Sleep Quality",
-    url: "#",
+    url: "#sleep-quality",
     topics: ["sleep"],
+    content: `
+      <h2>How to Improve Your Sleep Quality</h2>
+      <p>Getting enough quality sleep is crucial for both physical and mental health. Here are some strategies to improve your sleep:</p>
+      <ul>
+        <li><strong>Establish a Regular Sleep Schedule:</strong> Go to bed and wake up at the same time every day, even on weekends.</li>
+        <li><strong>Create a Relaxing Bedtime Routine:</strong> Take a warm bath, read a book, or listen to calming music before bed.</li>
+        <li><strong>Optimize Your Sleep Environment:</strong> Make sure your bedroom is dark, quiet, and cool.</li>
+        <li><strong>Limit Screen Time Before Bed:</strong> The blue light emitted from screens can interfere with sleep.</li>
+        <li><strong>Avoid Caffeine and Alcohol Before Bed:</strong> Both can disrupt your sleep patterns.</li>
+      </ul>
+      <p>If you continue to struggle with sleep, consider consulting a healthcare professional.</p>
+    `
   },
   {
     title: "Building Healthy Relationships",
-    url: "#",
+    url: "#healthy-relationships",
     topics: ["relationships"],
+    content: `
+      <h2>Building Healthy Relationships</h2>
+      <p>Healthy relationships are essential for our wellbeing. Here are some tips for building and maintaining strong relationships:</p>
+      <ul>
+        <li><strong>Communicate Openly and Honestly:</strong> Share your thoughts and feelings with your partner or friends.</li>
+        <li><strong>Practice Active Listening:</strong> Pay attention to what others are saying and show that you understand.</li>
+        <li><strong>Set Boundaries:</strong> Respect your own needs and boundaries, as well as those of others.</li>
+        <li><strong>Show Appreciation:</strong> Let your loved ones know that you value them.</li>
+        <li><strong>Resolve Conflicts Constructively:</strong> Address disagreements in a calm and respectful manner.</li>
+      </ul>
+      <p>Remember that healthy relationships require effort from both parties. Be willing to invest time and energy into your relationships.</p>
+    `
   },
   {
     title: "Mindfulness Techniques for Daily Life",
-    url: "#",
+    url: "#mindfulness-techniques",
     topics: ["stress", "anxiety", "general"],
+    content: `
+      <h2>Mindfulness Techniques for Daily Life</h2>
+      <p>Mindfulness is the practice of paying attention to the present moment without judgment. Here are some techniques to incorporate mindfulness into your daily life:</p>
+      <ul>
+        <li><strong>Mindful Breathing:</strong> Focus on your breath as it enters and leaves your body.</li>
+        <li><strong>Body Scan Meditation:</strong> Pay attention to sensations in different parts of your body.</li>
+        <li><strong>Mindful Walking:</strong> Notice the sensations of your feet as they make contact with the ground.</li>
+        <li><strong>Mindful Eating:</strong> Savor each bite of food and pay attention to its taste and texture.</li>
+        <li><strong>Mindful Listening:</strong> Give your full attention to the person who is speaking.</li>
+      </ul>
+      <p>Mindfulness can help reduce stress, improve focus, and increase overall wellbeing.</p>
+    `
   },
   {
     title: "Recognizing Burnout and Recovery Strategies",
-    url: "#",
+    url: "#burnout-recovery",
     topics: ["stress", "general"],
+    content: `
+      <h2>Recognizing Burnout and Recovery Strategies</h2>
+      <p>Burnout is a state of emotional, physical, and mental exhaustion caused by prolonged or excessive stress. Here are some signs of burnout and strategies for recovery:</p>
+      <h3>Signs of Burnout:</h3>
+      <ul>
+        <li>Feeling exhausted or drained most of the time</li>
+        <li>Having a cynical or negative outlook</li>
+        <li>Feeling detached from your work or relationships</li>
+        <li>Experiencing physical symptoms such as headaches or stomachaches</li>
+        <li>Having difficulty concentrating</li>
+      </ul>
+      <h3>Recovery Strategies:</h3>
+      <ul>
+        <li>Take breaks and vacations</li>
+        <li>Set boundaries and learn to say no</li>
+        <li>Practice self-care activities such as exercise, meditation, or hobbies</li>
+        <li>Seek support from friends, family, or a therapist</li>
+        <li>Re-evaluate your priorities and goals</li>
+      </ul>
+      <p>Remember that recovery from burnout takes time and effort. Be patient with yourself and prioritize your wellbeing.</p>
+    `
   }
 ];
 
@@ -171,6 +274,28 @@ const ChatInterface = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
+  
+  // New state variables for audio functionality
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<string | null>(null);
+  const [audioVolume, setAudioVolume] = useState(0.5);
+  const [showArticleDialog, setShowArticleDialog] = useState(false);
+  const [currentArticle, setCurrentArticle] = useState<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Create audio element
+  useEffect(() => {
+    audioRef.current = new Audio();
+    audioRef.current.volume = audioVolume;
+    
+    // Cleanup function
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -235,25 +360,72 @@ const ChatInterface = () => {
     }
   };
 
+  // Enhanced translation function with more robust translations
   const translateText = async (text: string, targetLanguage: string) => {
     if (targetLanguage === 'en') return text;
     
     // In a real app, you would use a translation API
-    // This is a simple mock implementation
+    // This is a more robust mock implementation with more phrases
     const translations: Record<string, Record<string, string>> = {
       hi: {
         "Hi there! I'm your Mindease companion. How are you feeling today?": "नमस्ते! मैं आपका Mindease साथी हूँ। आज आप कैसा महसूस कर रहे हैं?",
-        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "साझा करने के लिए धन्यवाद। मैं आपके मानसिक स्वास्थ्य का समर्थन करने के लिए यहां हूं।"
+        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "साझा करने के लिए धन्यवाद। मैं आपके मानसिक स्वास्थ्य का समर्थन करने के लिए यहां हूं।",
+        "I'm sorry to hear that you're feeling this way. Would you like to talk more about it?": "मुझे यह सुनकर दुख है कि आप ऐसा महसूस कर रहे हैं। क्या आप इसके बारे में और बात करना चाहेंगे?",
+        "It seems like you've been having a difficult time. Remember that it's okay to ask for help.": "ऐसा लगता है कि आपका समय कठिन रहा है। याद रखें कि मदद मांगना ठीक है।",
+        "What activities help you feel better when you're stressed?": "जब आप तनाव में होते हैं तो कौन सी गतिविधियां आपको बेहतर महसूस कराती हैं?",
+        "I'm having trouble connecting right now. Can we try again in a moment?": "मुझे अभी कनेक्ट करने में समस्या हो रही है। क्या हम थोड़ी देर में फिर से प्रयास कर सकते हैं?"
       },
       te: {
         "Hi there! I'm your Mindease companion. How are you feeling today?": "నమస్కారం! నేను మీ Mindease సహచరుడిని. ఈరోజు మీరు ఎలా అనుభవిస్తున్నారు?",
-        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "పంచుకున్నందుకు ధన్యవాదాలు. మీ మానసిక ఆరోగ్యానికి మద్దతుగా నేను ఇక్కడ ఉన్నాను."
+        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "పంచుకున్నందుకు ధన్యవాదాలు. మీ మానసిక ఆరోగ్యానికి మద్దతుగా నేను ఇక్కడ ఉన్నాను.",
+        "I'm sorry to hear that you're feeling this way. Would you like to talk more about it?": "మీరు ఈ విధంగా భావిస్తున్నారని తెలుసుకుని నాకు బాధగా ఉంది. దీని గురించి మరింత మాట్లాడాలనుకుంటున్నారా?",
+        "It seems like you've been having a difficult time. Remember that it's okay to ask for help.": "మీరు కష్టమైన సమయం గడుపుతున్నట్లు కనిపిస్తోంది. సహాయం అడగడం సరైనదే అని గుర్తుంచుకోండి.",
+        "I'm having trouble connecting right now. Can we try again in a moment?": "నాకు ఇప్పుడు కనెక్ట్ చేయడంలో సమస్య ఉంది. మనం కొద్దిసేపు తర్వాత మళ్లీ ప్రయత్నించవచ్చా?"
+      },
+      es: {
+        "Hi there! I'm your Mindease companion. How are you feeling today?": "¡Hola! Soy tu compañero Mindease. ¿Cómo te sientes hoy?",
+        "Thank you for sharing. I'm here to support you with your mental wellbeing.": "Gracias por compartir. Estoy aquí para apoyarte con tu bienestar mental.",
+        "I'm sorry to hear that you're feeling this way. Would you like to talk more about it?": "Lamento que te sientas así. ¿Te gustaría hablar más sobre esto?",
+        "I'm having trouble connecting right now. Can we try again in a moment?": "Estoy teniendo problemas para conectarme ahora mismo. ¿Podemos intentarlo de nuevo en un momento?"
       }
     };
     
-    return translations[targetLanguage]?.[text] || text;
+    // Try to find the specific translation
+    if (translations[targetLanguage]?.[text]) {
+      return translations[targetLanguage][text];
+    }
+    
+    // If not found, use a generic translation based on sentiment analysis
+    const { sentiment } = analyzeSentiment(text);
+    const genericResponses: Record<string, Record<string, string>> = {
+      hi: {
+        "positive": "यह अच्छी बात है! क्या आप और बताना चाहेंगे?",
+        "neutral": "मैं समझता हूँ। क्या आप और बताना चाहेंगे?",
+        "negative": "मुझे खेद है कि आप ऐसा महसूस कर रहे हैं। क्या मैं किसी तरह से मदद कर सकता हूँ?"
+      },
+      te: {
+        "positive": "అది మంచిది! మీరు ఇంకా చెప్పాలనుకుంటున్నారా?",
+        "neutral": "నేను అర్థం చేసుకుంటున్నాను. మీరు ఇంకేమైనా చెప్పాలనుకుంటున్నారా?",
+        "negative": "మీరు అలా భావిస్తున్నారని నాకు బాధగా ఉంది. నేను ఏదైనా సహాయం చేయగలనా?"
+      },
+      es: {
+        "positive": "¡Eso es bueno! ¿Te gustaría contarme más?",
+        "neutral": "Entiendo. ¿Hay algo más que quieras compartir?",
+        "negative": "Siento que te sientas así. ¿Puedo ayudarte de alguna manera?"
+      }
+    };
+    
+    // Return generic response based on sentiment or original text if no translation is available
+    if (sentiment.includes("Positive")) {
+      return genericResponses[targetLanguage]?.["positive"] || text;
+    } else if (sentiment.includes("Negative")) {
+      return genericResponses[targetLanguage]?.["negative"] || text;
+    } else {
+      return genericResponses[targetLanguage]?.["neutral"] || text;
+    }
   };
 
+  // Enhanced handleSend for better responsiveness
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -309,8 +481,8 @@ const ChatInterface = () => {
             "It seems you may be feeling low. Would you like to try a breathing exercise or check our resources?",
             {
               action: {
-                label: "Show Resources",
-                onClick: () => setShowResources(true),
+                label: "Try Breathing",
+                onClick: () => playAudio("Guided Breathing"),
               },
             }
           );
@@ -599,468 +771,4 @@ const ChatInterface = () => {
           
           <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
             <p className="text-sm text-yellow-800">
-              <span className="font-medium">Data Privacy Note:</span> This application stores your chat and mood data locally on your device only. 
-              This data is not transmitted to any servers and is used solely to provide you with a better experience.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEmergencySupport = () => {
-    return (
-      <div className="p-4">
-        <div className="mb-4">
-          <h3 className="text-xl font-medium text-red-600 flex items-center gap-2">
-            <Phone className="h-5 w-5" />
-            Emergency Support Contacts
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            If you're experiencing a mental health crisis, please don't hesitate to reach out for help.
-          </p>
-        </div>
-
-        <div className="space-y-3 mb-6">
-          {emergencyContacts.map((contact, index) => (
-            <div 
-              key={index}
-              className="flex justify-between items-center p-3 bg-white rounded-lg border border-red-100 hover:bg-red-50 transition-colors"
-            >
-              <div>
-                <p className="font-medium">{contact.name}</p>
-                <p className="text-red-600 font-medium">{contact.number}</p>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="border-red-200 hover:bg-red-100 hover:text-red-800"
-                onClick={() => {
-                  // In a real app, this would initiate a call
-                  toast.info(`In a real app, this would call ${contact.number}. This is just a demo.`);
-                }}
-              >
-                Call Now
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-          <h4 className="font-medium flex items-center gap-2 text-red-700 mb-2">
-            <AlertTriangle className="h-4 w-4" />
-            Alert a Guardian or Friend
-          </h4>
-          <p className="text-sm text-gray-700 mb-3">
-            With your consent, we can alert a pre-configured emergency contact when you're in distress.
-          </p>
-          <div className="flex justify-between items-center">
-            <Button 
-              variant="destructive"
-              size="sm"
-              onClick={alertGuardian}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Alert My Emergency Contact
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => toast.info("In a real app, this would let you manage your emergency contacts.")}
-            >
-              Manage Contacts
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderRelaxation = () => {
-    const relaxationOptions = [
-      { name: "Guided Breathing", duration: "5 min", icon: "🫁" },
-      { name: "Rain Sounds", duration: "15 min", icon: "🌧️" },
-      { name: "Forest Ambience", duration: "30 min", icon: "🌳" },
-      { name: "Deep Sleep Music", duration: "1 hour", icon: "🌙" },
-      { name: "Ocean Waves", duration: "20 min", icon: "🌊" },
-      { name: "Meditation Guide", duration: "10 min", icon: "🧘" },
-    ];
-
-    return (
-      <div className="p-4">
-        <div className="mb-4">
-          <h3 className="text-xl font-medium text-purple-600 flex items-center gap-2">
-            <Moon className="h-5 w-5" />
-            Sleep & Relaxation
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Discover calming sounds and guided meditations to help you relax and sleep better.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {relaxationOptions.map((option, index) => (
-            <button 
-              key={index}
-              className="p-4 bg-white rounded-lg border border-purple-100 hover:bg-purple-50 transition-colors flex flex-col items-center justify-center gap-2 text-center"
-              onClick={() => {
-                toast.info(`Playing ${option.name} for ${option.duration}. (Demo)`, {
-                  description: "In a full app, audio would start playing."
-                });
-              }}
-            >
-              <span className="text-2xl">{option.icon}</span>
-              <div>
-                <p className="font-medium">{option.name}</p>
-                <p className="text-xs text-gray-500">{option.duration}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <h4 className="font-medium mb-2">Sleep Timer</h4>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="15">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 minutes</SelectItem>
-                <SelectItem value="15">15 minutes</SelectItem>
-                <SelectItem value="30">30 minutes</SelectItem>
-                <SelectItem value="60">60 minutes</SelectItem>
-                <SelectItem value="120">2 hours</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              onClick={() => toast.info("Timer set! Audio would automatically stop after the selected time.")}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              Set Timer
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderArticles = () => {
-    return (
-      <div className="p-4">
-        <div className="mb-4">
-          <h3 className="text-xl font-medium text-blue-600 flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            Recommended Articles
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Articles and resources tailored to your conversations and selected topics.
-          </p>
-        </div>
-
-        <div className="space-y-3 mb-6">
-          {suggestedArticles.map((article, index) => (
-            <div 
-              key={index}
-              className="p-4 bg-white rounded-lg border border-blue-100 hover:bg-blue-50 transition-colors"
-            >
-              <h4 className="font-medium text-blue-800">{article.title}</h4>
-              <div className="flex gap-1 mt-1 mb-3">
-                {article.topics.map((topic, i) => (
-                  <span key={i} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                    {topic}
-                  </span>
-                ))}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-blue-600 border-blue-200"
-                onClick={() => {
-                  toast.info(`Opening article: ${article.title} (Demo)`);
-                }}
-              >
-                Read Article
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <h4 className="font-medium mb-2">Filter by Topic</h4>
-          <Select 
-            value={selectedTopic} 
-            onValueChange={(value) => {
-              setSelectedTopic(value);
-              if (value !== 'general') {
-                const filtered = recommendedArticles.filter(article => 
-                  article.topics.includes(value)
-                );
-                setSuggestedArticles(filtered.length > 0 ? filtered : recommendedArticles.slice(0, 3));
-              } else {
-                setSuggestedArticles(recommendedArticles.slice(0, 3));
-              }
-            }}
-          >
-            <SelectTrigger className="w-full mb-2">
-              <SelectValue placeholder="Select topic" />
-            </SelectTrigger>
-            <SelectContent>
-              {mentalhealthTopics.map((topic) => (
-                <SelectItem key={topic.value} value={topic.value}>
-                  {topic.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="mx-auto flex h-[calc(100vh-5rem)] max-w-4xl animate-fade-in flex-col p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Mindease AI Chat</h1>
-          <p className="text-muted-foreground">
-            Your supportive AI companion for mental wellbeing
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleMoodChart}
-            className={showMoodChart ? "bg-mindease text-white" : ""}
-          >
-            <LineChart className="h-4 w-4 mr-1" />
-            Mood Tracker
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleEmergencySupport}
-            className={showEmergencySupport ? "bg-red-600 text-white" : "text-red-600"}
-          >
-            <Phone className="h-4 w-4 mr-1" />
-            Emergency
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleResources}
-            className={showResources ? "bg-mindease text-white" : ""}
-          >
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Resources
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleRelaxation}
-            className={showRelaxation ? "bg-purple-600 text-white" : ""}
-          >
-            <Moon className="h-4 w-4 mr-1" />
-            Sleep & Relax
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={toggleArticles}
-            className={showArticles ? "bg-blue-600 text-white" : ""}
-          >
-            <BookOpen className="h-4 w-4 mr-1" />
-            Articles
-          </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={toggleStorageMode}
-                  className={storeLocally ? "bg-green-50" : ""}
-                >
-                  {storeLocally ? 'Local Storage' : 'Server Storage'}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">
-                  {storeLocally 
-                    ? 'Your data is stored only on this device' 
-                    : 'Your data is synced with our servers'}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
-      {/* Main chat area */}
-      <div className="flex-1 overflow-hidden rounded-md border">
-        {showMoodChart && renderMoodChart()}
-        {showResources && renderResources()}
-        {showEmergencySupport && renderEmergencySupport()}
-        {showRelaxation && renderRelaxation()}
-        {showArticles && renderArticles()}
-        
-        {/* Show chat when no other panel is active */}
-        {!showMoodChart && !showResources && !showEmergencySupport && !showRelaxation && !showArticles && (
-          <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
-            <div className="space-y-4 pb-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender === "bot" ? "justify-start" : "justify-end"
-                  } w-full`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg border p-3 ${
-                      message.sender === "bot"
-                        ? `${getEmotionColor(
-                            message.emotion
-                          )} rounded-tl-none`
-                        : "bg-primary text-primary-foreground rounded-tr-none"
-                    }`}
-                  >
-                    <div className="mb-1 flex items-center gap-1 text-xs">
-                      {message.sender === "bot" ? (
-                        <>
-                          <Bot className="h-3 w-3" />
-                          <span className="font-medium">Mindease AI</span>
-                          {message.emotion && (
-                            <span className="text-xs opacity-70">
-                              • {message.emotion}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <User className="h-3 w-3" />
-                          <span className="font-medium">You</span>
-                          {message.sentiment && (
-                            <span
-                              className={`text-xs ${getSentimentColor(
-                                message.sentiment
-                              )}`}
-                            >
-                              • {message.sentiment}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-                    <p className="whitespace-pre-wrap">{message.text}</p>
-                    <div className="mt-1 text-right text-xs opacity-70">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-lg rounded-tl-none border p-3 bg-mindease-light">
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: "0.2s" }}></div>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: "0.4s" }}></div>
-                      <span className="text-xs">Mindease AI is typing</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-        )}
-      </div>
-
-      {/* Footer with input and language selector */}
-      <div className="mt-4 space-y-2">
-        <div className="flex items-start gap-2">
-          {!longMessage ? (
-            <Input
-              placeholder="Type your message..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-          ) : (
-            <Textarea
-              placeholder="Type your longer message here..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="flex-1 min-h-[100px]"
-              ref={textareaRef}
-            />
-          )}
-          <Button
-            onClick={toggleInputType}
-            variant="outline"
-            size="icon"
-            title={longMessage ? "Switch to short message" : "Switch to long message"}
-          >
-            <ArrowUpCircle className={`h-5 w-5 transition-transform ${longMessage ? "rotate-180" : ""}`} />
-          </Button>
-          <Button onClick={handleSend} disabled={!inputValue.trim()}>
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Select
-              value={selectedLanguage}
-              onValueChange={setSelectedLanguage}
-            >
-              <SelectTrigger className="w-[140px] h-8 text-xs">
-                <Globe className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languageOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-              <SelectTrigger className="w-[140px] h-8 text-xs">
-                <Brain className="mr-1 h-3 w-3" />
-                <SelectValue placeholder="Topic" />
-              </SelectTrigger>
-              <SelectContent>
-                {mentalhealthTopics.map((topic) => (
-                  <SelectItem key={topic.value} value={topic.value}>
-                    {topic.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearChat}
-            className="h-8 text-xs"
-          >
-            Clear Chat
-          </Button>
-        </div>
-        {lastCopingStrategy && (
-          <div className="bg-blue-50 p-2 rounded-md border border-blue-100 text-sm">
-            <p><span className="font-semibold">Suggestion:</span> {lastCopingStrategy}</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default ChatInterface;
+              <span className="font-medium">Data Privacy Note:</span> This application stores

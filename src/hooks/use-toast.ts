@@ -1,4 +1,6 @@
 
-import { useToast, toast } from "@/components/ui/toast-hooks";
+// Re-export the toast hooks from shadcn's components
+import { useToast as useShadcnToast } from "@/components/ui/toast-hooks";
+import { toast } from "sonner";
 
-export { useToast, toast };
+export { useShadcnToast as useToast, toast };
