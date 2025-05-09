@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
+// Initialize the query client outside of the component
 const queryClient = new QueryClient();
 
 const ThemeInitializer = () => {
@@ -64,17 +65,18 @@ const AppRoutes = () => (
 );
 
 const App = () => (
+  // Ensure all providers are properly nested
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ThemeInitializer />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <ThemeInitializer />
+          <Toaster />
+          <Sonner />
           <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

@@ -14,6 +14,7 @@ const mockMoodData = [
 ];
 
 const MoodOverview = () => {
+  // Define the CustomTooltip component outside of the render function
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const moodValue = payload[0].value;
