@@ -24,6 +24,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   const [isResending, setIsResending] = useState(false);
   
   useEffect(() => {
+    // Countdown timer for resending OTP
     if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);

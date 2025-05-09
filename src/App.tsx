@@ -3,9 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MoodTrackerPage from "./pages/MoodTrackerPage";
@@ -36,9 +36,9 @@ const ThemeInitializer = () => {
   return null;
 };
 
-// Protected route component
+// Protected route component that uses the useAuth hook
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = require('./context/AuthContext').useAuth();
   
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
@@ -67,18 +67,17 @@ const AppRoutes = () => (
 );
 
 const App = () => (
-  // Ensure all providers are properly nested
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <TooltipProvider>
-          <ThemeInitializer />
-          <Toaster />
-          <Sonner />
+    <Router>
+      <TooltipProvider>
+        <ThemeInitializer />
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
           <AppRoutes />
-        </TooltipProvider>
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </Router>
   </QueryClientProvider>
 );
 

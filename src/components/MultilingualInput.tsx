@@ -1,83 +1,35 @@
 
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
+import React, { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+  SelectValue,
+} from '@/components/ui/select';
 
-// Language keyboard layouts
-const languageKeyboards: Record<string, Record<string, string>> = {
-  te: {
-    'a': 'అ', 'aa': 'ఆ', 'i': 'ఇ', 'ii': 'ఈ',
-    'u': 'ఉ', 'uu': 'ఊ', 'e': 'ఎ', 'ee': 'ఏ',
-    'o': 'ఒ', 'oo': 'ఓ', 'k': 'క', 'kh': 'ఖ',
-    'g': 'గ', 'gh': 'ఘ', 'ch': 'చ', 'j': 'జ',
-    't': 'త', 'th': 'థ', 'd': 'ద', 'dh': 'ధ',
-    'n': 'న', 'p': 'ప', 'ph': 'ఫ', 'b': 'బ',
-    'bh': 'భ', 'm': 'మ', 'y': 'య', 'r': 'ర',
-    'l': 'ల', 'v': 'వ', 's': 'స', 'h': 'హ',
-  },
-  hi: {
-    'a': 'अ', 'aa': 'आ', 'i': 'इ', 'ii': 'ई',
-    'u': 'उ', 'uu': 'ऊ', 'e': 'ए', 'ai': 'ऐ',
-    'o': 'ओ', 'au': 'औ', 'k': 'क', 'kh': 'ख',
-    'g': 'ग', 'gh': 'घ', 'ch': 'च', 'chh': 'छ',
-    'j': 'ज', 'jh': 'झ', 't': 'त', 'th': 'थ',
-    'd': 'द', 'dh': 'ध', 'n': 'न', 'p': 'प',
-    'ph': 'फ', 'b': 'ब', 'bh': 'भ', 'm': 'म',
-    'y': 'य', 'r': 'र', 'l': 'ल', 'v': 'व',
-    'sh': 'श', 's': 'स', 'h': 'ह',
-  },
-  ta: {
-    'a': 'அ', 'aa': 'ஆ', 'i': 'இ', 'ii': 'ஈ',
-    'u': 'உ', 'uu': 'ஊ', 'e': 'எ', 'ee': 'ஏ',
-    'ai': 'ஐ', 'o': 'ஒ', 'oo': 'ஓ', 'au': 'ஔ',
-    'k': 'க', 'ng': 'ங', 'ch': 'ச', 'nj': 'ஞ',
-    't': 'ட', 'n': 'ண', 'th': 'த', 'nh': 'ந',
-    'p': 'ப', 'm': 'ம', 'y': 'ய', 'r': 'ர',
-    'l': 'ல', 'v': 'வ', 'zh': 'ழ', 'll': 'ள',
-    'lr': 'ற', 'n': 'ன', 'j': 'ஜ', 'sh': 'ஷ',
-    's': 'ஸ', 'h': 'ஹ',
-  },
-};
+const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'hi', label: 'हिन्दी' },
+  { value: 'te', label: 'తెలుగు' }, // Telugu
+];
 
-// Virtual keyboard component
-const VirtualKeyboard = ({ language, onKeyClick }: { language: string, onKeyClick: (key: string) => void }) => {
-  if (!languageKeyboards[language]) return null;
-  
-  const keyboard = languageKeyboards[language];
-  
-  return (
-    <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md shadow-inner">
-      <div className="grid grid-cols-8 gap-1 mb-1">
-        {Object.entries(keyboard).slice(0, 16).map(([roman, char]) => (
-          <button 
-            key={roman} 
-            className="text-sm p-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-            onClick={() => onKeyClick(char)}
-          >
-            {char}
-          </button>
-        ))}
-      </div>
-      <div className="grid grid-cols-8 gap-1">
-        {Object.entries(keyboard).slice(16, 32).map(([roman, char]) => (
-          <button 
-            key={roman} 
-            className="text-sm p-1 bg-white dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-            onClick={() => onKeyClick(char)}
-          >
-            {char}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+// Virtual keyboards for different languages
+const virtualKeyboards: Record<string, string[]> = {
+  te: [
+    'అ', 'ఆ', 'ఇ', 'ఈ', 'ఉ', 'ఊ', 'ఋ', 'ౠ', 'ఎ', 'ఏ', 'ఐ', 'ఒ', 'ఓ', 'ఔ', 'అం', 'అః',
+    'క', 'ఖ', 'గ', 'ఘ', 'ఙ', 'చ', 'ఛ', 'జ', 'ఝ', 'ఞ', 'ట', 'ఠ', 'డ', 'ఢ', 'ణ',
+    'త', 'థ', 'ద', 'ధ', 'న', 'ప', 'ఫ', 'బ', 'భ', 'మ', 'య', 'ర', 'ల', 'వ', 'శ', 'ష', 'స', 'హ'
+  ],
+  hi: [
+    'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ', 'अं', 'अः',
+    'क', 'ख', 'ग', 'घ', 'ङ', 'च', 'छ', 'ज', 'झ', 'ञ', 'ट', 'ठ', 'ड', 'ढ', 'ण',
+    'त', 'थ', 'द', 'ध', 'न', 'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श', 'ष', 'स', 'ह'
+  ],
 };
 
 interface MultilingualInputProps {
@@ -85,77 +37,75 @@ interface MultilingualInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-  multiline?: boolean;
-  id?: string;
+  disabled?: boolean;
 }
 
 const MultilingualInput: React.FC<MultilingualInputProps> = ({
   value,
   onChange,
-  placeholder = "Type your message...",
-  className = "",
-  multiline = false,
-  id
+  placeholder = 'Type your message...',
+  className = '',
+  disabled = false,
 }) => {
-  const [showKeyboard, setShowKeyboard] = useState(false);
-  const [language, setLanguage] = useState<string>("en");
-  
-  const handleKeyClick = (char: string) => {
+  const [language, setLanguage] = useState('en');
+  const [showVirtualKeyboard, setShowVirtualKeyboard] = useState(false);
+
+  // Function to insert character at current cursor position
+  const insertChar = (char: string) => {
     onChange(value + char);
   };
-  
-  const toggleKeyboard = () => {
-    setShowKeyboard(!showKeyboard);
-  };
-  
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang);
-    if (newLang !== "en") {
-      setShowKeyboard(true);
-    } else {
-      setShowKeyboard(false);
-    }
-  };
-  
-  const InputComponent = multiline ? Textarea : Input;
-  
+
   return (
-    <div className="flex flex-col space-y-1">
-      <div className="flex items-center gap-2">
+    <div className="space-y-2 w-full">
+      <div className="flex gap-2">
         <div className="flex-1">
-          <InputComponent
-            id={id}
+          <Input
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             className={className}
+            disabled={disabled}
+            onClick={() => setShowVirtualKeyboard(true)}
           />
         </div>
-        <div>
-          <Select value={language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="w-[100px]">
-              <SelectValue placeholder="Language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="hi">Hindi</SelectItem>
-              <SelectItem value="te">Telugu</SelectItem>
-              <SelectItem value="ta">Tamil</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {language !== "en" && (
-          <button 
-            className={`p-2 rounded-full ${showKeyboard ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
-            onClick={toggleKeyboard}
-          >
-            {showKeyboard ? "Hide" : "🌐"}
-          </button>
-        )}
+        <Select value={language} onValueChange={setLanguage}>
+          <SelectTrigger className="w-[100px]">
+            <SelectValue placeholder="Language" />
+          </SelectTrigger>
+          <SelectContent>
+            {languageOptions.map((lang) => (
+              <SelectItem key={lang.value} value={lang.value}>
+                {lang.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       
-      {showKeyboard && language !== "en" && (
-        <VirtualKeyboard language={language} onKeyClick={handleKeyClick} />
+      {showVirtualKeyboard && (virtualKeyboards[language]) && (
+        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
+          <div className="flex flex-wrap gap-1 max-h-[150px] overflow-y-auto">
+            {virtualKeyboards[language].map((char, i) => (
+              <button
+                key={i}
+                className="min-w-[30px] h-8 flex items-center justify-center bg-white dark:bg-gray-700 rounded border border-gray-300 dark:border-gray-600"
+                onClick={() => insertChar(char)}
+                type="button"
+              >
+                {char}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-end mt-2">
+            <button
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => setShowVirtualKeyboard(false)}
+              type="button"
+            >
+              Close Keyboard
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

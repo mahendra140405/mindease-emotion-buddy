@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Check if we're using placeholders
@@ -45,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(isUsingPlaceholders ? mockUser : null);
   const [session, setSession] = useState<Session | null>(isUsingPlaceholders ? mockSession : null);
   const [loading, setLoading] = useState(!isUsingPlaceholders);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Skip real auth check if using placeholders
@@ -94,7 +92,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(mockUser);
         setSession(mockSession);
         toast.success('Signed in successfully (Demo Mode)');
-        navigate('/dashboard');
+        
+        // Store user in localStorage for other components
+        if (mockUser) {
+          localStorage.setItem("user", JSON.stringify({ email: mockUser.email }));
+        }
+        
         return;
       }
       
@@ -106,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success('Signed in successfully');
-      navigate('/dashboard');
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('An error occurred during sign in');
@@ -123,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Mock successful registration in development
         console.log('Mock: Signing up with', email, 'and name', name);
         toast.success('Account created successfully! (Demo Mode)');
-        navigate('/login');
         return;
       }
       
@@ -141,7 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success('Account created successfully! Please check your email for verification.');
-      navigate('/login');
     } catch (error) {
       console.error('Sign up error:', error);
       toast.error('An error occurred during sign up');
@@ -159,13 +159,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Mock: Signing out');
         setUser(null);
         setSession(null);
-        navigate('/');
+        // Remove user from localStorage
+        localStorage.removeItem("user");
         toast.success('Signed out successfully (Demo Mode)');
         return;
       }
       
       await supabase.auth.signOut();
-      navigate('/');
+      // Remove user from localStorage
+      localStorage.removeItem("user");
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
