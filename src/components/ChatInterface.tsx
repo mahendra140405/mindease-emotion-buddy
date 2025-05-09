@@ -771,4 +771,278 @@ const ChatInterface = () => {
           
           <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-3">
             <p className="text-sm text-yellow-800">
-              <span className="font-medium">Data Privacy Note:</span> This application stores
+              <span className="font-medium">Data Privacy Note:</span> This application stores your chat and mood data locally on your device only. 
+              This data is not transmitted to any servers and is used solely to provide you with a better experience.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderEmergencySupport = () => {
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-4">Emergency Support</h3>
+        
+        <div className="space-y-4">
+          {emergencyContacts.map(contact => (
+            <div key={contact.name} className="rounded-lg border p-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <Phone className="h-4 w-4 text-blue-500" />
+                {contact.name}
+              </h4>
+              <ul className="mt-2 space-y-2 text-sm">
+                <li className="flex items-center justify-between">
+                  <span>{contact.number}</span>
+                  <span className="font-medium">{contact.tel}</span>
+                </li>
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderRelaxation = () => {
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-4">Relaxation Techniques</h3>
+        
+        <div className="space-y-4">
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <ArrowUpCircle className="h-4 w-4 text-green-500" />
+              Guided Breathing
+            </h4>
+            <p className="text-sm text-gray-500">Listen to a guided breathing exercise to help you relax.</p>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <LineChart className="h-4 w-4 text-blue-500" />
+              Rain Sounds
+            </h4>
+            <p className="text-sm text-gray-500">Listen to rain sounds to help you relax.</p>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Globe className="h-4 w-4 text-purple-500" />
+              Forest Ambience
+            </h4>
+            <p className="text-sm text-gray-500">Listen to forest sounds to help you relax.</p>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Moon className="h-4 w-4 text-yellow-500" />
+              Deep Sleep Music
+            </h4>
+            <p className="text-sm text-gray-500">Listen to deep sleep music to help you relax.</p>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-red-500" />
+              Ocean Waves
+            </h4>
+            <p className="text-sm text-gray-500">Listen to ocean waves to help you relax.</p>
+          </div>
+          
+          <div className="rounded-lg border p-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Play className="h-4 w-4 text-green-500" />
+              Meditation Guide
+            </h4>
+            <p className="text-sm text-gray-500">Listen to a meditation guide to help you relax.</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderArticles = () => {
+    return (
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-4">Recommended Articles</h3>
+        
+        <div className="space-y-4">
+          {suggestedArticles.map(article => (
+            <div key={article.title} className="rounded-lg border p-3">
+              <h4 className="font-medium flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-blue-500" />
+                {article.title}
+              </h4>
+              <a 
+                href={article.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline flex items-center gap-1"
+              >
+                Read More
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const playAudio = (audioName: string) => {
+    if (audioRef.current) {
+      audioRef.current.src = audioFiles[audioName];
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+    }
+  };
+
+  const changeVolume = (volume: number) => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+      setAudioVolume(volume);
+    }
+  };
+
+  const openArticle = (article: any) => {
+    setCurrentArticle(article);
+    setShowArticleDialog(true);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <ScrollArea ref={scrollAreaRef}>
+          <div className="p-4">
+            {messages.map((message, index) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`flex items-center gap-2 ${message.sender === "user" ? "bg-mindease-light border-mindease-light" : "bg-mindease-dark border-mindease-dark"}`}
+                >
+                  {message.sender === "user" ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
+                  <div className="flex flex-col">
+                    <div className="text-sm text-gray-500">{message.text}</div>
+                    {message.sentiment && (
+                      <div className="text-xs text-gray-500">
+                        <span className="font-medium">Sentiment:</span> {message.sentiment}
+                      </div>
+                    )}
+                    {message.polarity && (
+                      <div className="text-xs text-gray-500">
+                        <span className="font-medium">Polarity:</span> {message.polarity.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <div className="flex flex-col">
+                  <div className="text-sm text-gray-500">Typing...</div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div ref={messagesEndRef} />
+        </ScrollArea>
+      </div>
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            className="flex-1"
+          />
+          <Button onClick={handleSend} className="bg-mindease-dark text-white">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={selectedLanguage}
+            onValueChange={setSelectedLanguage}
+            className="w-24"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Language" />
+            </SelectTrigger>
+            <SelectContent>
+              {languageOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={selectedTopic}
+            onValueChange={setSelectedTopic}
+            className="w-24"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Topic" />
+            </SelectTrigger>
+            <SelectContent>
+              {mentalhealthTopics.map(topic => (
+                <SelectItem key={topic.value} value={topic.value}>
+                  {topic.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={toggleInputType} className="bg-mindease-dark text-white">
+            {longMessage ? "Shorter" : "Longer"}
+          </Button>
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <Tabs defaultValue="moodChart">
+          <TabsList className="flex space-x-4">
+            <TabsTrigger value="moodChart">Mood Chart</TabsTrigger>
+            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="emergencySupport">Emergency Support</TabsTrigger>
+            <TabsTrigger value="relaxation">Relaxation</TabsTrigger>
+            <TabsTrigger value="articles">Articles</TabsTrigger>
+          </TabsList>
+          <TabsContent value="moodChart">
+            {renderMoodChart()}
+          </TabsContent>
+          <TabsContent value="resources">
+            {renderResources()}
+          </TabsContent>
+          <TabsContent value="emergencySupport">
+            {renderEmergencySupport()}
+          </TabsContent>
+          <TabsContent value="relaxation">
+            {renderRelaxation()}
+          </TabsContent>
+          <TabsContent value="articles">
+            {renderArticles()}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default ChatInterface;
