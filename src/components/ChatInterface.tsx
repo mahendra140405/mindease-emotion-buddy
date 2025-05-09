@@ -882,4 +882,185 @@ const ChatInterface = () => {
                   onClick={toggleStorageMode}
                   className={storeLocally ? "bg-green-50" : ""}
                 >
-                  {storeLoc
+                  {storeLocally ? 'Local Storage' : 'Server Storage'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-xs">
+                  {storeLocally 
+                    ? 'Your data is stored only on this device' 
+                    : 'Your data is synced with our servers'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {/* Main chat area */}
+      <div className="flex-1 overflow-hidden rounded-md border">
+        {showMoodChart && renderMoodChart()}
+        {showResources && renderResources()}
+        {showEmergencySupport && renderEmergencySupport()}
+        {showRelaxation && renderRelaxation()}
+        {showArticles && renderArticles()}
+        
+        {/* Show chat when no other panel is active */}
+        {!showMoodChart && !showResources && !showEmergencySupport && !showRelaxation && !showArticles && (
+          <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
+            <div className="space-y-4 pb-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.sender === "bot" ? "justify-start" : "justify-end"
+                  } w-full`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg border p-3 ${
+                      message.sender === "bot"
+                        ? `${getEmotionColor(
+                            message.emotion
+                          )} rounded-tl-none`
+                        : "bg-primary text-primary-foreground rounded-tr-none"
+                    }`}
+                  >
+                    <div className="mb-1 flex items-center gap-1 text-xs">
+                      {message.sender === "bot" ? (
+                        <>
+                          <Bot className="h-3 w-3" />
+                          <span className="font-medium">Mindease AI</span>
+                          {message.emotion && (
+                            <span className="text-xs opacity-70">
+                              • {message.emotion}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <User className="h-3 w-3" />
+                          <span className="font-medium">You</span>
+                          {message.sentiment && (
+                            <span
+                              className={`text-xs ${getSentimentColor(
+                                message.sentiment
+                              )}`}
+                            >
+                              • {message.sentiment}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                    <div className="mt-1 text-right text-xs opacity-70">
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] rounded-lg rounded-tl-none border p-3 bg-mindease-light">
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-primary" style={{ animationDelay: "0.4s" }}></div>
+                      <span className="text-xs">Mindease AI is typing</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+        )}
+      </div>
+
+      {/* Footer with input and language selector */}
+      <div className="mt-4 space-y-2">
+        <div className="flex items-start gap-2">
+          {!longMessage ? (
+            <Input
+              placeholder="Type your message..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1"
+            />
+          ) : (
+            <Textarea
+              placeholder="Type your longer message here..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="flex-1 min-h-[100px]"
+              ref={textareaRef}
+            />
+          )}
+          <Button
+            onClick={toggleInputType}
+            variant="outline"
+            size="icon"
+            title={longMessage ? "Switch to short message" : "Switch to long message"}
+          >
+            <ArrowUpCircle className={`h-5 w-5 transition-transform ${longMessage ? "rotate-180" : ""}`} />
+          </Button>
+          <Button onClick={handleSend} disabled={!inputValue.trim()}>
+            <Send className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Select
+              value={selectedLanguage}
+              onValueChange={setSelectedLanguage}
+            >
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <Globe className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <Brain className="mr-1 h-3 w-3" />
+                <SelectValue placeholder="Topic" />
+              </SelectTrigger>
+              <SelectContent>
+                {mentalhealthTopics.map((topic) => (
+                  <SelectItem key={topic.value} value={topic.value}>
+                    {topic.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearChat}
+            className="h-8 text-xs"
+          >
+            Clear Chat
+          </Button>
+        </div>
+        {lastCopingStrategy && (
+          <div className="bg-blue-50 p-2 rounded-md border border-blue-100 text-sm">
+            <p><span className="font-semibold">Suggestion:</span> {lastCopingStrategy}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ChatInterface;
