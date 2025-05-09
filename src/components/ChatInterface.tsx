@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -12,15 +10,10 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { generateAIResponse } from "@/lib/supabase";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
+import MultilingualInput from "@/components/MultilingualInput";
+import { playAudio } from "@/utils/audioUtils";
 
 // Sentiment analysis function (adapted from TextBlob functionality)
 const analyzeSentiment = (text: string): { sentiment: string; polarity: number } => {
@@ -123,7 +116,6 @@ const ChatInterface = () => {
   const [storeLocally, setStoreLocally] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -311,7 +303,11 @@ const ChatInterface = () => {
             {
               action: {
                 label: "Try Breathing",
-                onClick: () => playAudio("Guided Breathing"),
+                onClick: () => {
+                  // Use the audio utility to play breathing exercise
+                  playAudio("Guided Breathing");
+                  toast.success("Playing guided breathing exercise. Try to follow along.");
+                },
               },
             }
           );
@@ -355,19 +351,6 @@ const ChatInterface = () => {
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const updateSuggestedArticles = (message: string) => {
-    // This function is now only used to track topic interests
-    // We'll use this data in the future to personalize recommendations
-    const lowerMessage = message.toLowerCase();
-    
-    // Log topics of interest for future use
-    mentalhealthTopics.forEach(topic => {
-      if (lowerMessage.includes(topic.value) && topic.value !== 'general') {
-        console.log(`User showed interest in topic: ${topic.label}`);
-      }
-    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -428,25 +411,8 @@ const ChatInterface = () => {
 
   const toggleInputType = () => {
     setLongMessage(!longMessage);
-    setTimeout(() => {
-      if (!longMessage) {
-        textareaRef.current?.focus();
-      }
-    }, 0);
   };
   
-  const toggleStorageMode = () => {
-    if (storeLocally) {
-      const confirmChange = window.confirm(
-        "Switching to server storage mode will upload your conversation data to our servers. Do you want to proceed?"
-      );
-      if (!confirmChange) return;
-    } else {
-      toast.success("Switched to local storage mode. Your data stays on your device.");
-    }
-    setStoreLocally(!storeLocally);
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -507,38 +473,30 @@ const ChatInterface = () => {
       <div className="p-4 border-t">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-24">
-            <Select 
+            <select 
               value={selectedLanguage} 
-              onValueChange={setSelectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languageOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {languageOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="w-24">
-            <Select 
+            <select 
               value={selectedTopic} 
-              onValueChange={setSelectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Topic" />
-              </SelectTrigger>
-              <SelectContent>
-                {mentalhealthTopics.map(topic => (
-                  <SelectItem key={topic.value} value={topic.value}>
-                    {topic.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {mentalhealthTopics.map(topic => (
+                <option key={topic.value} value={topic.value}>
+                  {topic.label}
+                </option>
+              ))}
+            </select>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -567,33 +525,18 @@ const ChatInterface = () => {
           </TooltipProvider>
         </div>
         
-        {longMessage ? (
-          <div className="flex items-end gap-2">
-            <Textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 min-h-[100px] resize-none"
-            />
-            <Button onClick={handleSend} className="bg-primary">
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="flex-1"
-            />
-            <Button onClick={handleSend} className="bg-primary">
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        <div className="flex items-end gap-2">
+          <MultilingualInput
+            value={inputValue}
+            onChange={setInputValue}
+            placeholder="Type your message..."
+            className="flex-1"
+            multiline={longMessage}
+          />
+          <Button onClick={handleSend} className="bg-primary">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
