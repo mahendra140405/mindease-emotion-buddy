@@ -23,9 +23,10 @@ const LoginForm = () => {
     try {
       const result = await signIn(email, password);
       if (result && result.error) {
-        setErrorMessage("Incorrect email or password. Please try again.");
+        setErrorMessage(result.error);
         toast.error("Login failed. Please check your credentials.");
       } else {
+        toast.success("Login successful!");
         navigate("/dashboard");
       }
     } catch (error) {

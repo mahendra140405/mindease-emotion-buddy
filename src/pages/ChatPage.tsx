@@ -7,9 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Brain } from "lucide-react";
+import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MultilingualInput from "@/components/MultilingualInput";
+import { saveChatMessage, getChatHistory } from "@/lib/supabase";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -51,28 +52,83 @@ const detectEmotion = (text: string): string | undefined => {
 
 const ChatPage = () => {
   const { user, loading } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    // Try to load messages from localStorage
-    const savedMessages = localStorage.getItem("chat-messages");
-    if (savedMessages) {
-      try {
-        return JSON.parse(savedMessages);
-      } catch (error) {
-        console.error("Error parsing saved messages:", error);
-        return INITIAL_MESSAGES;
-      }
-    }
-    return INITIAL_MESSAGES;
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Function to save messages
-  const saveMessages = (updatedMessages: ChatMessage[]) => {
+  // Function to save messages to both local storage and server
+  const saveMessages = async (updatedMessages: ChatMessage[]) => {
+    // Save to local storage
     localStorage.setItem("chat-messages", JSON.stringify(updatedMessages));
+    
+    // Save latest user message to server if there's a user message
+    const latestMessage = updatedMessages[updatedMessages.length - 1];
+    if (latestMessage && latestMessage.role === "user") {
+      try {
+        await saveChatMessage({
+          text: latestMessage.content,
+          sender: 'user',
+          emotion: latestMessage.emotion
+        });
+      } catch (error) {
+        console.error("Error saving message to server:", error);
+      }
+    }
   };
+
+  // Load messages on initial load
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        // Try to load messages from localStorage first
+        const savedMessages = localStorage.getItem("chat-messages");
+        let loadedMessages = INITIAL_MESSAGES;
+        
+        if (savedMessages) {
+          try {
+            loadedMessages = JSON.parse(savedMessages);
+          } catch (error) {
+            console.error("Error parsing saved messages:", error);
+          }
+        }
+        
+        // Try to load messages from server and append unique ones
+        if (user) {
+          const serverMessages = await getChatHistory();
+          if (serverMessages && serverMessages.length > 0) {
+            // Convert server messages to our format
+            const formattedServerMessages = serverMessages.map(msg => ({
+              role: msg.sender === 'user' ? 'user' : 'assistant',
+              content: msg.text,
+              timestamp: new Date(msg.created_at || Date.now()),
+              emotion: msg.emotion
+            })) as ChatMessage[];
+            
+            // Merge messages, preferring local ones if there's overlap
+            const localMessageIds = new Set(loadedMessages.map(m => m.content));
+            const uniqueServerMessages = formattedServerMessages.filter(
+              m => !localMessageIds.has(m.content)
+            );
+            
+            loadedMessages = [...loadedMessages, ...uniqueServerMessages].sort(
+              (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+            );
+          }
+        }
+        
+        setMessages(loadedMessages);
+        setIsInitialLoad(false);
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        setIsInitialLoad(false);
+      }
+    };
+    
+    loadMessages();
+  }, [user]);
 
   // Function to clear chat history
   const clearChat = () => {
@@ -90,10 +146,12 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-    // Save messages when they change
-    saveMessages(messages);
-  }, [messages]);
+    if (!isInitialLoad) {
+      scrollToBottom();
+      // Save messages when they change
+      saveMessages(messages);
+    }
+  }, [messages, isInitialLoad]);
 
   // Function to handle sending messages
   const handleSendMessage = async () => {
@@ -112,6 +170,13 @@ const ChatPage = () => {
     setIsLoading(true);
 
     try {
+      // Save the user message to both storages
+      await saveChatMessage({
+        text: userMessage.content,
+        sender: 'user',
+        emotion: userMessage.emotion
+      });
+      
       // Simulate API delay for more natural interaction
       setTimeout(() => {
         const assistantResponse: ChatMessage = {
@@ -125,6 +190,16 @@ const ChatPage = () => {
           saveMessages(updatedMessages);
           return updatedMessages;
         });
+        
+        // Also save assistant message to server
+        saveChatMessage({
+          text: assistantResponse.content,
+          sender: 'bot',
+          emotion: 'supportive'
+        }).catch(error => {
+          console.error("Error saving assistant message to server:", error);
+        });
+        
         setIsLoading(false);
       }, 1000);
     } catch (error) {
