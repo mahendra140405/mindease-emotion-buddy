@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +14,9 @@ import {
   MessageSquare,
   BookOpen,
   Sun,
-  Moon
+  Moon,
+  Music,
+  Phone
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -119,6 +120,11 @@ const NavBar = () => {
       icon: Activity,
     },
     {
+      name: "Relaxation Audio",
+      path: "/relaxation-audio",
+      icon: Music,
+    },
+    {
       name: "Chat",
       path: "/chat",
       icon: MessageSquare,
@@ -127,6 +133,11 @@ const NavBar = () => {
       name: "Resources",
       path: "/resources",
       icon: BookOpen,
+    },
+    {
+      name: "Contact",
+      path: "/contact",
+      icon: Phone,
     },
   ];
 

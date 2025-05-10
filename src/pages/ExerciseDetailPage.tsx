@@ -1,10 +1,10 @@
-
 import NavBar from "@/components/NavBar";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Wind, Brain, Heart, Music, Flower, Moon, ArrowLeft, Check, Timer } from "lucide-react";
+import { Wind, Brain, Heart, Music, Flower, Moon, ArrowLeft, Check, Timer, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { playAudio, pauseAudio } from "@/utils/audioUtils";
 
 interface Exercise {
   id: number;
@@ -15,6 +15,7 @@ interface Exercise {
   icon: React.ReactNode;
   steps: string[];
   benefits: string[];
+  audioTrack?: string;
 }
 
 const exercisesData: Exercise[] = [
@@ -38,7 +39,8 @@ const exercisesData: Exercise[] = [
       "Lowers blood pressure",
       "Improves focus and concentration",
       "Helps with emotional regulation"
-    ]
+    ],
+    audioTrack: "Ocean Waves"
   },
   {
     id: 2,
@@ -59,7 +61,8 @@ const exercisesData: Exercise[] = [
       "Enhances self-awareness",
       "Improves emotional health",
       "Lengthens attention span"
-    ]
+    ],
+    audioTrack: "Forest Sounds"
   },
   {
     id: 3,
@@ -154,6 +157,7 @@ const ExerciseDetailPage = () => {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [audioPlaying, setAudioPlaying] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -175,6 +179,30 @@ const ExerciseDetailPage = () => {
       navigate("/exercises");
     }
   }, [id, navigate]);
+
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      pauseAudio();
+    };
+  }, []);
+
+  // Handle audio when exercise changes
+  useEffect(() => {
+    if (sessionStarted && exercise?.audioTrack) {
+      const audio = playAudio(exercise.audioTrack);
+      if (audio) {
+        setAudioPlaying(true);
+        toast({
+          title: "Audio Started",
+          description: `Playing ${exercise.audioTrack} for your session`,
+        });
+      }
+    } else {
+      pauseAudio();
+      setAudioPlaying(false);
+    }
+  }, [sessionStarted, exercise, toast]);
 
   useEffect(() => {
     // Timer for exercise session
@@ -201,9 +229,29 @@ const ExerciseDetailPage = () => {
       const confirmed = window.confirm("Are you sure you want to end your exercise session?");
       if (confirmed) {
         setSessionStarted(false);
+        pauseAudio();
+        setAudioPlaying(false);
       }
     } else {
       navigate("/exercises");
+    }
+  };
+
+  const toggleAudio = () => {
+    if (audioPlaying) {
+      pauseAudio();
+      setAudioPlaying(false);
+      toast({
+        title: "Audio Paused",
+        description: "Background audio has been paused",
+      });
+    } else if (exercise?.audioTrack) {
+      playAudio(exercise.audioTrack);
+      setAudioPlaying(true);
+      toast({
+        title: "Audio Resumed",
+        description: `Playing ${exercise.audioTrack}`,
+      });
     }
   };
 
@@ -219,6 +267,8 @@ const ExerciseDetailPage = () => {
 
   const completeExercise = () => {
     setSessionStarted(false);
+    pauseAudio();
+    setAudioPlaying(false);
     toast({
       title: "Exercise completed!",
       description: "Great job completing your exercise session",
@@ -243,14 +293,36 @@ const ExerciseDetailPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <NavBar />
       <div className="container mx-auto py-8 px-4 animate-fade-in">
-        <Button 
-          variant="ghost" 
-          onClick={handleBack} 
-          className="mb-6 flex items-center text-mindease dark:text-white"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {sessionStarted ? "End Session" : "Back to Exercises"}
-        </Button>
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={handleBack} 
+            className="flex items-center text-mindease dark:text-white"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {sessionStarted ? "End Session" : "Back to Exercises"}
+          </Button>
+          
+          {exercise.audioTrack && (
+            <Button
+              variant="outline"
+              onClick={toggleAudio}
+              className="flex items-center gap-2"
+            >
+              {audioPlaying ? (
+                <>
+                  <VolumeX className="h-4 w-4" />
+                  Mute Audio
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-4 w-4" />
+                  Play Audio
+                </>
+              )}
+            </Button>
+          )}
+        </div>
         
         {sessionStarted ? (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm animate-fade-in">

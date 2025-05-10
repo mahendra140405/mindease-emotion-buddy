@@ -10,8 +10,10 @@ const Index = () => {
     const user = localStorage.getItem("user");
     
     if (user) {
+      // Redirect to dashboard if user is logged in
       navigate("/dashboard");
     } else {
+      // Redirect to login if user is not logged in
       navigate("/login");
     }
   }, [navigate]);

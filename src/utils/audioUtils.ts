@@ -3,10 +3,10 @@
 
 // Audio tracks for relaxation exercises
 const audioTracks = {
-  "Guided Breathing": "/relaxation/guided-breathing.mp3",
-  "Ocean Waves": "/relaxation/ocean-waves.mp3",
-  "Forest Sounds": "/relaxation/forest-sounds.mp3",
-  "Meditation": "/relaxation/meditation.mp3",
+  "Guided Breathing": "/sounds/guided-breathing.mp3",
+  "Ocean Waves": "/sounds/ocean-waves.mp3",
+  "Forest Sounds": "/sounds/forest-sounds.mp3",
+  "Meditation": "/sounds/meditation.mp3",
 };
 
 // Store current audio instance
@@ -20,19 +20,26 @@ export const playAudio = (trackName: string) => {
     currentAudio.currentTime = 0;
   }
   
-  // Use dummy path if actual audio file doesn't exist yet
-  const audioPath = audioTracks[trackName as keyof typeof audioTracks] || "/relaxation/sample.mp3";
+  // Find the track path
+  const audioPath = audioTracks[trackName as keyof typeof audioTracks];
+  
+  if (!audioPath) {
+    console.error(`Audio track "${trackName}" not found`);
+    return null;
+  }
   
   // Create and play new audio
   const audio = new Audio(audioPath);
   audio.loop = true;
+  
+  console.log(`Attempting to play ${trackName} from path: ${audioPath}`);
   
   const playPromise = audio.play();
   if (playPromise !== undefined) {
     playPromise
       .then(() => {
         currentAudio = audio;
-        console.log(`Playing ${trackName}`);
+        console.log(`Playing ${trackName} successfully`);
       })
       .catch(error => {
         console.error("Audio playback failed:", error);

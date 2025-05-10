@@ -17,6 +17,7 @@ import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import RelaxationAudioPage from "./pages/RelaxationAudioPage";
 
 // Initialize the query client outside of the component
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const AppRoutes = () => (
     <Route path="/exercises/:id" element={<ProtectedRoute><ExerciseDetailPage /></ProtectedRoute>} />
     <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
     <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
+    <Route path="/relaxation-audio" element={<ProtectedRoute><RelaxationAudioPage /></ProtectedRoute>} />
     <Route path="/contact" element={<ContactPage />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
