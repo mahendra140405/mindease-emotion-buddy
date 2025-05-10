@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,75 @@ const INITIAL_ARTICLES: SuggestedArticle[] = [
   },
 ];
 
-// ... keep existing code (EXERCISE_SUGGESTIONS, RELAXATION_AUDIOS, EMOTION_KEYWORDS)
+// Exercise suggestions
+const EXERCISE_SUGGESTIONS: ExerciseSuggestion[] = [
+  {
+    id: "1",
+    name: "5-Minute Breathing Exercise",
+    description: "A simple breathing technique to reduce anxiety and bring focus to the present moment.",
+    duration: "5 minutes"
+  },
+  {
+    id: "2",
+    name: "Progressive Muscle Relaxation",
+    description: "Tense and relax each muscle group to release physical tension and mental stress.",
+    duration: "15 minutes"
+  },
+  {
+    id: "3",
+    name: "Guided Body Scan Meditation",
+    description: "Bring awareness to each part of your body to promote relaxation and mindfulness.",
+    duration: "10 minutes"
+  },
+  {
+    id: "4",
+    name: "Gratitude Journaling",
+    description: "Write down three things you're grateful for to shift focus towards positivity.",
+    duration: "5 minutes"
+  }
+];
+
+// Relaxation audios
+const RELAXATION_AUDIOS = [
+  {
+    id: "1",
+    title: "Ocean Waves",
+    description: "Calming sounds of gentle ocean waves breaking on the shore.",
+    duration: "10 minutes",
+    audioSrc: "/sounds/ocean-waves.mp3"
+  },
+  {
+    id: "2",
+    title: "Gentle Rain",
+    description: "Soothing sounds of rainfall to help you relax and unwind.",
+    duration: "15 minutes",
+    audioSrc: "/sounds/gentle-rain.mp3"
+  },
+  {
+    id: "3",
+    title: "Forest Sounds",
+    description: "Immerse yourself in the peaceful sounds of a forest environment.",
+    duration: "20 minutes",
+    audioSrc: "/sounds/forest-sounds.mp3"
+  },
+  {
+    id: "4",
+    title: "Meditation Bell",
+    description: "Periodic meditation bell sounds to guide your mindfulness practice.",
+    duration: "12 minutes",
+    audioSrc: "https://assets.mixkit.co/sfx/preview/mixkit-meditation-bell-599.mp3"
+  }
+];
+
+// Emotion keywords for detection
+const EMOTION_KEYWORDS: Record<string, string[]> = {
+  "happy": ["happy", "joy", "excited", "good", "great", "wonderful", "fantastic", "thrilled"],
+  "sad": ["sad", "unhappy", "depressed", "down", "low", "blue", "upset", "miserable"],
+  "angry": ["angry", "upset", "mad", "furious", "annoyed", "irritated", "frustrated"],
+  "anxious": ["anxious", "worried", "nervous", "afraid", "scared", "fearful", "stress", "stressed"],
+  "tired": ["tired", "exhausted", "sleepy", "fatigued", "drained", "weary"],
+  "calm": ["calm", "peaceful", "relaxed", "content", "serene", "tranquil"]
+};
 
 // Function to detect emotion from text
 const detectEmotion = (text: string): string | undefined => {
