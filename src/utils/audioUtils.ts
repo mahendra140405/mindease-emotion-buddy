@@ -45,10 +45,34 @@ export const playAudio = (trackName: string) => {
         })
         .catch(error => {
           console.error("Audio playback failed:", error);
+          // Try fallback audio from a public CDN
+          audio.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
+          audio.play()
+            .then(() => {
+              currentAudio = audio;
+              console.log("Playing fallback audio successfully");
+            })
+            .catch(innerError => {
+              console.error("Fallback audio playback failed:", innerError);
+            });
         });
     }
   } catch (error) {
     console.error("Audio playback error:", error);
+    // Try fallback audio
+    try {
+      audio.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
+      audio.play()
+        .then(() => {
+          currentAudio = audio;
+          console.log("Playing fallback audio successfully");
+        })
+        .catch(innerError => {
+          console.error("Fallback audio playback failed:", innerError);
+        });
+    } catch (fallbackError) {
+      console.error("Fallback audio error:", fallbackError);
+    }
   }
   
   return audio;
