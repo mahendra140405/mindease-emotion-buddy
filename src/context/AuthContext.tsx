@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Check if we're using placeholders
 const isUsingPlaceholders = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -40,12 +41,26 @@ const mockSession = isUsingPlaceholders ? {
   provider_refresh_token: null
 } as Session : null;
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(isUsingPlaceholders ? mockUser : null);
-  const [session, setSession] = useState<Session | null>(isUsingPlaceholders ? mockSession : null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(!isUsingPlaceholders);
 
   useEffect(() => {
+    // Check if user exists in localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser as User);
+        setSession(mockSession);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+      }
+    }
+    
     // Skip real auth check if using placeholders
     if (isUsingPlaceholders) {
       setLoading(false);
@@ -65,6 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session) {
         setSession(session);
         setUser(session.user);
+        // Store user in localStorage
+        localStorage.setItem('user', JSON.stringify(session.user));
       }
       
       setLoading(false);
@@ -76,6 +93,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Update localStorage
+      if (session?.user) {
+        localStorage.setItem('user', JSON.stringify(session.user));
+      } else {
+        localStorage.removeItem('user');
+      }
+      
       setLoading(false);
     });
 
@@ -91,13 +116,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Mock: Signing in with', email);
         setUser(mockUser);
         setSession(mockSession);
+        
+        // Store user in localStorage
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        
         toast.success('Signed in successfully (Demo Mode)');
-        
-        // Store user in localStorage for other components
-        if (mockUser) {
-          localStorage.setItem("user", JSON.stringify({ email: mockUser.email }));
-        }
-        
+        window.location.href = '/dashboard';
         return;
       }
       
@@ -109,6 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success('Signed in successfully');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('An error occurred during sign in');
@@ -124,7 +149,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isUsingPlaceholders) {
         // Mock successful registration in development
         console.log('Mock: Signing up with', email, 'and name', name);
+        
+        // Store user in localStorage with the provided email
+        const mockSignupUser = {
+          ...mockUser,
+          email: email,
+          user_metadata: { name: name }
+        };
+        
+        localStorage.setItem('user', JSON.stringify(mockSignupUser));
+        
+        setUser(mockSignupUser as User);
+        setSession(mockSession);
+        
         toast.success('Account created successfully! (Demo Mode)');
+        // Auto sign-in after signup in development
+        window.location.href = '/dashboard';
         return;
       }
       
@@ -142,6 +182,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       toast.success('Account created successfully! Please check your email for verification.');
+      // Redirect to login page after signup
+      window.location.href = '/login';
     } catch (error) {
       console.error('Sign up error:', error);
       toast.error('An error occurred during sign up');
@@ -160,15 +202,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setSession(null);
         // Remove user from localStorage
-        localStorage.removeItem("user");
+        localStorage.removeItem('user');
         toast.success('Signed out successfully (Demo Mode)');
+        window.location.href = '/login';
         return;
       }
       
       await supabase.auth.signOut();
       // Remove user from localStorage
-      localStorage.removeItem("user");
+      localStorage.removeItem('user');
       toast.success('Signed out successfully');
+      window.location.href = '/login';
     } catch (error) {
       console.error('Sign out error:', error);
       toast.error('An error occurred during sign out');

@@ -1,6 +1,7 @@
 
 import React, { useState, ChangeEvent, KeyboardEvent } from 'react';
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface MultilingualInputProps {
   value: string;
@@ -20,13 +21,14 @@ const MultilingualInput: React.FC<MultilingualInputProps> = ({
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<'english' | 'telugu'>('english');
   
-  // Telugu characters mapping - simplified example
+  // Telugu characters mapping
   const teluguCharacters = [
     'అ', 'ఆ', 'ఇ', 'ఈ', 'ఉ', 'ఊ', 'ఋ', 'ౠ', 'ఎ', 'ఏ',
     'ఐ', 'ఒ', 'ఓ', 'ఔ', 'క', 'ఖ', 'గ', 'ఘ', 'ఙ', 'చ',
     'ఛ', 'జ', 'ఝ', 'ఞ', 'ట', 'ఠ', 'డ', 'ఢ', 'ణ', 'త',
     'థ', 'ద', 'ధ', 'న', 'ప', 'ఫ', 'బ', 'భ', 'మ', 'య',
     'ర', 'ల', 'వ', 'శ', 'ష', 'స', 'హ', 'ళ', 'క్ష', 'ఱ',
+    'ౖ', 'ో', 'ౌ', 'ా', 'ి', 'ీ', 'ు', 'ూ', 'ృ', 'ె', 'ే', '్', '‌', '‍'
   ];
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +67,7 @@ const MultilingualInput: React.FC<MultilingualInputProps> = ({
       </div>
       
       {showKeyboard && (
-        <div className="absolute z-10 mt-1 p-2 bg-white shadow-lg rounded-md border w-full">
+        <div className="absolute z-50 mt-1 p-2 bg-white shadow-lg rounded-md border w-full max-h-60">
           <div className="flex justify-between mb-2">
             <span className="font-medium">Virtual Keyboard</span>
             <button 
@@ -76,43 +78,45 @@ const MultilingualInput: React.FC<MultilingualInputProps> = ({
             </button>
           </div>
           
-          {selectedLanguage === 'english' ? (
-            <div className="grid grid-cols-10 gap-1">
-              {Array.from('abcdefghijklmnopqrstuvwxyz1234567890').map((char, index) => (
+          <ScrollArea className="h-48">
+            {selectedLanguage === 'english' ? (
+              <div className="grid grid-cols-10 gap-1">
+                {Array.from('abcdefghijklmnopqrstuvwxyz1234567890').map((char, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleCharacterClick(char)}
+                    className="p-2 border rounded hover:bg-gray-100"
+                  >
+                    {char}
+                  </button>
+                ))}
                 <button
-                  key={index}
-                  onClick={() => handleCharacterClick(char)}
-                  className="p-2 border rounded hover:bg-gray-100"
+                  onClick={() => handleCharacterClick(' ')}
+                  className="col-span-10 p-2 border rounded hover:bg-gray-100"
                 >
-                  {char}
+                  Space
                 </button>
-              ))}
-              <button
-                onClick={() => handleCharacterClick(' ')}
-                className="col-span-10 p-2 border rounded hover:bg-gray-100"
-              >
-                Space
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-10 gap-1">
-              {teluguCharacters.map((char, index) => (
+              </div>
+            ) : (
+              <div className="grid grid-cols-10 gap-1">
+                {teluguCharacters.map((char, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleCharacterClick(char)}
+                    className="p-2 border rounded hover:bg-gray-100"
+                  >
+                    {char}
+                  </button>
+                ))}
                 <button
-                  key={index}
-                  onClick={() => handleCharacterClick(char)}
-                  className="p-2 border rounded hover:bg-gray-100"
+                  onClick={() => handleCharacterClick(' ')}
+                  className="col-span-10 p-2 border rounded hover:bg-gray-100"
                 >
-                  {char}
+                  Space
                 </button>
-              ))}
-              <button
-                onClick={() => handleCharacterClick(' ')}
-                className="col-span-10 p-2 border rounded hover:bg-gray-100"
-              >
-                Space
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </ScrollArea>
         </div>
       )}
     </div>
