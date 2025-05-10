@@ -1,9 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 // Check if we're using placeholders
 const isUsingPlaceholders = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -12,7 +10,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{error?: string} | undefined>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -114,6 +112,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (isUsingPlaceholders) {
         // Mock successful login in development
         console.log('Mock: Signing in with', email);
+        
+        // Mock validation check - simple demo to demonstrate wrong password functionality
+        if (password === "wrongpassword") {
+          return { error: "Invalid login credentials" };
+        }
+        
         setUser(mockUser);
         setSession(mockSession);
         
@@ -121,22 +125,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('user', JSON.stringify(mockUser));
         
         toast.success('Signed in successfully (Demo Mode)');
-        window.location.href = '/dashboard';
         return;
       }
       
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
-        toast.error(error.message);
-        return;
+        return { error: error.message };
       }
       
       toast.success('Signed in successfully');
-      window.location.href = '/dashboard';
+      return;
     } catch (error) {
       console.error('Sign in error:', error);
-      toast.error('An error occurred during sign in');
+      return { error: 'An error occurred during sign in' };
     } finally {
       setLoading(false);
     }

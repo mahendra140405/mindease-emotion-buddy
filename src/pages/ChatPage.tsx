@@ -22,7 +22,10 @@ const ChatPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <NavBar />
-      <ChatInterface />
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-6">Chat with Mindease AI</h1>
+        <ChatInterface />
+      </div>
     </div>
   );
 };

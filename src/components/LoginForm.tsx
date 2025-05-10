@@ -7,16 +7,31 @@ import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
 import { Brain } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const { signIn, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    setErrorMessage("");
+    
+    try {
+      const result = await signIn(email, password);
+      if (result && result.error) {
+        setErrorMessage("Incorrect email or password. Please try again.");
+        toast.error("Login failed. Please check your credentials.");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      setErrorMessage("An error occurred during sign in. Please try again.");
+      toast.error("Login failed. Please try again later.");
+    }
   };
 
   return (
@@ -32,6 +47,12 @@ const LoginForm = () => {
         
         <div className="mt-8 bg-white p-8 shadow-md rounded-2xl">
           <form className="space-y-6" onSubmit={handleEmailSubmit}>
+            {errorMessage && (
+              <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-md text-sm">
+                {errorMessage}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

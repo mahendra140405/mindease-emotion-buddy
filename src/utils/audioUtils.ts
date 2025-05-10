@@ -6,6 +6,7 @@ const audioTracks = {
   "Guided Breathing": "/sounds/guided-breathing.mp3",
   "Ocean Waves": "/sounds/ocean-waves.mp3",
   "Forest Sounds": "/sounds/forest-sounds.mp3",
+  "Gentle Rain": "/sounds/gentle-rain.mp3",
   "Meditation": "/sounds/meditation.mp3",
 };
 
@@ -34,16 +35,20 @@ export const playAudio = (trackName: string) => {
   
   console.log(`Attempting to play ${trackName} from path: ${audioPath}`);
   
-  const playPromise = audio.play();
-  if (playPromise !== undefined) {
-    playPromise
-      .then(() => {
-        currentAudio = audio;
-        console.log(`Playing ${trackName} successfully`);
-      })
-      .catch(error => {
-        console.error("Audio playback failed:", error);
-      });
+  try {
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          currentAudio = audio;
+          console.log(`Playing ${trackName} successfully`);
+        })
+        .catch(error => {
+          console.error("Audio playback failed:", error);
+        });
+    }
+  } catch (error) {
+    console.error("Audio playback error:", error);
   }
   
   return audio;
@@ -58,8 +63,15 @@ export const pauseAudio = () => {
 
 // Resume current audio
 export const resumeAudio = () => {
-  if (currentAudio) {
-    currentAudio.play();
+  if (currentAudio && currentAudio.paused) {
+    try {
+      currentAudio.play()
+        .catch(error => {
+          console.error("Audio resume failed:", error);
+        });
+    } catch (error) {
+      console.error("Audio resume error:", error);
+    }
   }
 };
 
