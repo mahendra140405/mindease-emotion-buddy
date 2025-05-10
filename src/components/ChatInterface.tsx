@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
-  timestamp: Date;
+  timestamp: Date | string;
   emotion?: string;
 }
 
@@ -62,60 +61,7 @@ const INITIAL_ARTICLES: SuggestedArticle[] = [
   },
 ];
 
-const EXERCISE_SUGGESTIONS: ExerciseSuggestion[] = [
-  {
-    id: "1",
-    name: "Deep Breathing",
-    description: "Slow, deep breaths to reduce stress and anxiety",
-    duration: "5 min",
-  },
-  {
-    id: "2",
-    name: "Progressive Muscle Relaxation",
-    description: "Tensing and relaxing muscle groups for stress relief",
-    duration: "10 min",
-  },
-  {
-    id: "3",
-    name: "Guided Meditation",
-    description: "Focus your mind and promote relaxation",
-    duration: "15 min",
-  },
-];
-
-const RELAXATION_AUDIOS = [
-  { 
-    id: "1", 
-    title: "Calm Forest Sounds", 
-    description: "Peaceful forest ambience with birds and gentle breeze",
-    duration: "10 min",
-    audioSrc: "/sounds/forest-sounds.mp3"
-  },
-  { 
-    id: "2", 
-    title: "Ocean Waves", 
-    description: "Soothing ocean waves for relaxation",
-    duration: "15 min",
-    audioSrc: "/sounds/ocean-waves.mp3"
-  },
-  { 
-    id: "3", 
-    title: "Gentle Rain", 
-    description: "Calming rain sounds for focus and sleep",
-    duration: "20 min",
-    audioSrc: "/sounds/gentle-rain.mp3"
-  }
-];
-
-// Keywords for emotion detection
-const EMOTION_KEYWORDS = {
-  happy: ["happy", "joy", "excited", "good", "wonderful", "great", "delighted", "pleased"],
-  sad: ["sad", "depressed", "unhappy", "down", "blue", "miserable", "gloomy", "heartbroken"],
-  angry: ["angry", "mad", "furious", "annoyed", "irritated", "frustrated", "outraged"],
-  anxious: ["anxious", "worried", "nervous", "stressed", "uneasy", "tense", "apprehensive"],
-  calm: ["calm", "relaxed", "peaceful", "tranquil", "serene", "composed", "collected"],
-  fearful: ["scared", "afraid", "terrified", "frightened", "fearful", "panicked", "horrified"]
-};
+// ... keep existing code (EXERCISE_SUGGESTIONS, RELAXATION_AUDIOS, EMOTION_KEYWORDS)
 
 // Function to detect emotion from text
 const detectEmotion = (text: string): string | undefined => {
@@ -130,11 +76,39 @@ const detectEmotion = (text: string): string | undefined => {
   return undefined;
 };
 
+// Helper function to ensure timestamp is a Date object
+const ensureDateTimestamp = (timestamp: Date | string): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  
+  try {
+    return new Date(timestamp);
+  } catch (error) {
+    // If conversion fails, return current date as fallback
+    console.warn("Failed to convert timestamp to Date, using current date instead");
+    return new Date();
+  }
+};
+
 const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     // Try to load messages from localStorage
     const savedMessages = localStorage.getItem("chat-messages");
-    return savedMessages ? JSON.parse(savedMessages) : INITIAL_MESSAGES;
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        // Ensure all timestamps are converted to Date objects
+        return parsedMessages.map((msg: ChatMessage) => ({
+          ...msg,
+          timestamp: ensureDateTimestamp(msg.timestamp)
+        }));
+      } catch (error) {
+        console.error("Error parsing saved messages:", error);
+        return INITIAL_MESSAGES;
+      }
+    }
+    return INITIAL_MESSAGES;
   });
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -147,6 +121,7 @@ const ChatInterface = () => {
   const [currentAudio, setCurrentAudio] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [storageType, setStorageType] = useState<"local" | "server">("local");
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Function to save messages based on storage type
   const saveMessages = (updatedMessages: ChatMessage[]) => {
@@ -207,7 +182,9 @@ const ChatInterface = () => {
     // Check for depression-related keywords
     const depressedKeywords = [
       "depressed", "sad", "unhappy", "miserable", "down", "blue", "hopeless", 
-      "helpless", "worthless", "empty", "numb", "alone", "lonely"
+      "helpless", "worthless", "empty", "numb", "alone", "lonely", "tired",
+      "exhausted", "no energy", "can't sleep", "don't feel like", "don't want to",
+      "suicidal", "kill myself"
     ];
     
     // Check for anxiety-related keywords
@@ -391,13 +368,19 @@ const ChatInterface = () => {
           variant: "destructive",
         });
         
-        // Try fallback audio
+        // Try fallback audio from a public CDN
         newPlayer.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
         newPlayer.play().catch(err => {
           console.error("Error playing fallback audio:", err);
+          toast({
+            title: "Audio Error",
+            description: "Could not play audio. Please check your browser settings.",
+            variant: "destructive",
+          });
         });
       };
       
+      // Attempt to load actual audio first
       newPlayer.src = audioSrc;
       newPlayer.loop = true;
       
@@ -414,7 +397,7 @@ const ChatInterface = () => {
       }).catch(err => {
         console.error("Error playing audio:", err);
         
-        // Try fallback audio
+        // Try fallback audio from a public CDN
         newPlayer.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
         newPlayer.play().catch(innerErr => {
           console.error("Error playing fallback audio:", innerErr);
@@ -479,7 +462,7 @@ const ChatInterface = () => {
     <div className="container mx-auto py-6 h-[calc(100vh-80px)]">
       <Card className="h-full border-0 shadow-lg overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="border-b px-4 sticky top-0 bg-white z-10">
+          <div className="border-b px-4 sticky top-0 bg-white dark:bg-gray-800 z-10">
             <div className="flex justify-between items-center">
               <TabsList className="justify-start h-16">
                 <TabsTrigger value="chat" className="data-[state=active]:bg-mindease data-[state=active]:text-white">
@@ -545,59 +528,64 @@ const ChatInterface = () => {
           </div>
           
           <TabsContent value="chat" className="flex-1 flex flex-col px-4 pt-4 pb-2 overflow-hidden">
-            <div className="flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto" ref={chatContainerRef}>
               <ScrollArea className="h-full pr-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    } mb-4`}
-                  >
-                    <div className="flex items-start max-w-[80%]">
-                      {message.role === "assistant" && (
-                        <Avatar className="h-8 w-8 mr-2">
-                          <AvatarImage src="/placeholder.svg" alt="AI" />
-                          <AvatarFallback className="bg-mindease text-white">
-                            AI
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div
-                        className={`px-4 py-2 rounded-lg ${
-                          message.role === "user"
-                            ? "bg-mindease text-white rounded-tr-none"
-                            : "bg-muted rounded-tl-none"
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        {message.emotion && message.role === "user" && (
-                          <div className="text-xs mt-1 italic text-white/80">
-                            Detected emotion: {message.emotion}
-                          </div>
+                {messages.map((message, index) => {
+                  // Ensure the timestamp is a Date object before using toLocaleTimeString
+                  const timestampDate = ensureDateTimestamp(message.timestamp);
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`flex ${
+                        message.role === "user" ? "justify-end" : "justify-start"
+                      } mb-4`}
+                    >
+                      <div className="flex items-start max-w-[80%]">
+                        {message.role === "assistant" && (
+                          <Avatar className="h-8 w-8 mr-2">
+                            <AvatarImage src="/placeholder.svg" alt="AI" />
+                            <AvatarFallback className="bg-mindease text-white">
+                              AI
+                            </AvatarFallback>
+                          </Avatar>
                         )}
                         <div
-                          className={`text-xs mt-1 ${
-                            message.role === "user" ? "text-white/70" : "text-muted-foreground"
+                          className={`px-4 py-2 rounded-lg ${
+                            message.role === "user"
+                              ? "bg-mindease text-white rounded-tr-none"
+                              : "bg-muted rounded-tl-none"
                           }`}
                         >
-                          {message.timestamp.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          <p className="text-sm">{message.content}</p>
+                          {message.emotion && message.role === "user" && (
+                            <div className="text-xs mt-1 italic text-white/80">
+                              Detected emotion: {message.emotion}
+                            </div>
+                          )}
+                          <div
+                            className={`text-xs mt-1 ${
+                              message.role === "user" ? "text-white/70" : "text-muted-foreground"
+                            }`}
+                          >
+                            {timestampDate.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
                         </div>
+                        {message.role === "user" && (
+                          <Avatar className="h-8 w-8 ml-2">
+                            <AvatarImage src="/placeholder.svg" alt="User" />
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              U
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
                       </div>
-                      {message.role === "user" && (
-                        <Avatar className="h-8 w-8 ml-2">
-                          <AvatarImage src="/placeholder.svg" alt="User" />
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            U
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isLoading && (
                   <div className="flex justify-start mb-4">
                     <div className="flex items-start max-w-[80%]">
