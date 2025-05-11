@@ -1,4 +1,3 @@
-
 import NavBar from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -7,16 +6,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send } from "lucide-react";
+import { Send, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MultilingualInput from "@/components/MultilingualInput";
 import { saveChatMessage, getChatHistory } from "@/lib/supabase";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
   emotion?: string;
+  language?: string;
 }
 
 const INITIAL_MESSAGES: ChatMessage[] = [
@@ -24,7 +25,17 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     role: "assistant",
     content: "Hello! I'm your mental wellness assistant. How can I help you today?",
     timestamp: new Date(),
+    language: "english"
   },
+];
+
+// Languages supported by the chatbot
+const SUPPORTED_LANGUAGES = [
+  { code: "english", name: "English" },
+  { code: "telugu", name: "Telugu" },
+  { code: "hindi", name: "Hindi" },
+  { code: "spanish", name: "Spanish" },
+  { code: "french", name: "French" },
 ];
 
 // Emotion keywords for detection
@@ -50,12 +61,59 @@ const detectEmotion = (text: string): string | undefined => {
   return undefined;
 };
 
+// Sample multilingual responses
+const getMultilingualResponse = (text: string, language: string): string => {
+  // Simple detection of greeting patterns
+  const isGreeting = /hello|hi|hey|good|namaste|namaskar|hola|bonjour/i.test(text.toLowerCase());
+  
+  if (language === "telugu") {
+    if (isGreeting) return "నమస్కారం! నేను మీ మానసిక ఆరోగ్య సహాయకుడిని. నేను మీకు ఎలా సహాయపడగలను?";
+    return "మీరు పంచుకున్నందుకు ధన్యవాదాలు. నేను మీ మానసిక ఆరోగ్య ప్రయాణంలో మీకు మద్దతు ఇస్తున్నాను. నేను మీకు ఇంకా ఏమి సహాయం చేయగలను?";
+  } 
+  else if (language === "hindi") {
+    if (isGreeting) return "नमस्ते! मैं आपका मानसिक स्वास्थ्य सहायक हूँ। मैं आपकी कैसे मदद कर सकता हूँ?";
+    return "शेयर करने के लिए धन्यवाद। मैं आपकी मानसिक स्वास्थ्य यात्रा में आपका समर्थन करने के लिए यहां हूं। मैं आज आपकी और कैसे सहायता कर सकता हूँ?";
+  }
+  else if (language === "spanish") {
+    if (isGreeting) return "¡Hola! Soy tu asistente de bienestar mental. ¿Cómo puedo ayudarte hoy?";
+    return "Gracias por compartir. Estoy aquí para apoyarte en tu viaje de bienestar mental. ¿En qué más puedo ayudarte hoy?";
+  }
+  else if (language === "french") {
+    if (isGreeting) return "Bonjour ! Je suis votre assistant de bien-être mental. Comment puis-je vous aider aujourd'hui ?";
+    return "Merci de partager. Je suis là pour vous soutenir dans votre parcours de bien-être mental. Comment puis-je vous aider davantage aujourd'hui ?";
+  }
+  else {
+    if (isGreeting) return "Hello! I'm your mental wellness assistant. How can I help you today?";
+    return "Thanks for sharing. I'm here to support you on your wellness journey. How else can I assist you today?";
+  }
+};
+
+// Function to detect language (simplified version)
+const detectLanguage = (text: string): string => {
+  // Simple language detection based on common characters and words
+  // Telugu has specific Unicode range
+  if (/[\u0C00-\u0C7F]/.test(text)) return "telugu";
+  
+  // Hindi has specific Unicode range
+  if (/[\u0900-\u097F]/.test(text)) return "hindi";
+  
+  // Spanish specific words
+  if (/hola|como|está|gracias|buenos días|qué|por favor/i.test(text)) return "spanish";
+  
+  // French specific words
+  if (/bonjour|merci|comment|ça va|je suis|s'il vous plaît/i.test(text)) return "french";
+  
+  // Default to English
+  return "english";
+};
+
 const ChatPage = () => {
   const { user, loading } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -71,7 +129,8 @@ const ChatPage = () => {
         await saveChatMessage({
           text: latestMessage.content,
           sender: 'user',
-          emotion: latestMessage.emotion
+          emotion: latestMessage.emotion,
+          language: latestMessage.language
         });
       } catch (error) {
         console.error("Error saving message to server:", error);
@@ -104,7 +163,8 @@ const ChatPage = () => {
               role: msg.sender === 'user' ? 'user' : 'assistant',
               content: msg.text,
               timestamp: new Date(msg.created_at || Date.now()),
-              emotion: msg.emotion
+              emotion: msg.emotion,
+              language: msg.language || 'english'
             })) as ChatMessage[];
             
             // Merge messages, preferring local ones if there's overlap
@@ -157,12 +217,17 @@ const ChatPage = () => {
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
+    // Detect the language of the input (if auto-detection is enabled)
+    const detectedLanguage = detectLanguage(inputValue);
+    const messageLanguage = selectedLanguage === "auto" ? detectedLanguage : selectedLanguage;
+
     // Add user message to chat with emotion detection
     const userMessage: ChatMessage = {
       role: "user",
       content: inputValue.trim(),
       timestamp: new Date(),
-      emotion: detectEmotion(inputValue)
+      emotion: detectEmotion(inputValue),
+      language: messageLanguage
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -174,15 +239,20 @@ const ChatPage = () => {
       await saveChatMessage({
         text: userMessage.content,
         sender: 'user',
-        emotion: userMessage.emotion
+        emotion: userMessage.emotion,
+        language: messageLanguage
       });
       
       // Simulate API delay for more natural interaction
       setTimeout(() => {
+        // Get multilingual response based on detected language
+        const responseContent = getMultilingualResponse(userMessage.content, messageLanguage);
+        
         const assistantResponse: ChatMessage = {
           role: "assistant",
-          content: `Thanks for sharing. I'm here to support you on your wellness journey. How else can I assist you today?`,
+          content: responseContent,
           timestamp: new Date(),
+          language: messageLanguage
         };
         
         setMessages((prev) => {
@@ -195,7 +265,8 @@ const ChatPage = () => {
         saveChatMessage({
           text: assistantResponse.content,
           sender: 'bot',
-          emotion: 'supportive'
+          emotion: 'supportive',
+          language: messageLanguage
         }).catch(error => {
           console.error("Error saving assistant message to server:", error);
         });
@@ -238,14 +309,24 @@ const ChatPage = () => {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Chat with Mindease AI</h1>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={clearChat}
-            className="flex items-center gap-1"
-          >
-            Clear Chat
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.location.href = "/doctors"}
+              className="flex items-center gap-1"
+            >
+              Contact Doctors
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearChat}
+              className="flex items-center gap-1"
+            >
+              Clear Chat
+            </Button>
+          </div>
         </div>
 
         <Card className="h-[calc(100vh-200px)] border-0 shadow-lg overflow-hidden">
@@ -279,6 +360,12 @@ const ChatPage = () => {
                         {message.emotion && message.role === "user" && (
                           <div className="text-xs mt-1 italic text-white/80">
                             Detected emotion: {message.emotion}
+                          </div>
+                        )}
+                        {message.language && (
+                          <div className="flex items-center text-xs mt-1 italic text-white/80">
+                            <Globe className="h-3 w-3 mr-1" /> 
+                            {SUPPORTED_LANGUAGES.find(lang => lang.code === message.language)?.name || message.language}
                           </div>
                         )}
                         <div
@@ -327,6 +414,23 @@ const ChatPage = () => {
               </ScrollArea>
             </div>
             <div className="p-4 border-t">
+              <div className="flex items-center mb-3">
+                <Globe className="h-5 w-5 mr-2 text-muted-foreground" />
+                <Select 
+                  defaultValue={selectedLanguage}
+                  onValueChange={setSelectedLanguage}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto Detect</SelectItem>
+                    {SUPPORTED_LANGUAGES.map(lang => (
+                      <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center space-x-2">
                 <MultilingualInput
                   value={inputValue}

@@ -1,256 +1,193 @@
-import React, { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import {
-  User,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  BarChart3,
-  Activity,
-  MessageSquare,
-  BookOpen,
-  Sun,
-  Moon,
-  Music,
-  Phone
-} from "lucide-react";
-import Logo from "@/components/Logo";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import Logo from "./Logo";
+import { Menu, BarChart, MessageSquare, Book, Dumbbell, Headphones, PhoneCall } from "lucide-react";
 
 const NavBar = () => {
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user: authUser } = useAuth();
 
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      setUser(JSON.parse(userStr));
-    }
-    
-    // Check if dark mode preference is saved
-    const darkMode = localStorage.getItem("darkMode") === "true";
-    setIsDarkMode(darkMode);
-    
-    // Apply dark mode class if enabled
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    toast.success("Logged out successfully");
-    navigate("/");
+  const handleSignOut = async () => {
+    await signOut();
   };
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    
-    // Save preference to localStorage
-    localStorage.setItem("darkMode", String(newDarkMode));
-    
-    // Toggle dark mode class on html element
-    if (newDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    
-    toast.success(`${newDarkMode ? "Dark" : "Light"} mode enabled`);
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsOpen(open);
   };
 
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const NavItem = ({
-    to,
-    icon: Icon,
-    label,
-  }: {
-    to: string;
-    icon: React.ElementType;
-    label: string;
-  }) => (
-    <NavLink
-      to={to}
-      onClick={closeMenu}
-      className={`flex items-center space-x-2 rounded-lg px-3 py-2 transition-colors ${
-        isActive(to)
-          ? "bg-mindease text-white"
-          : "text-gray-700 hover:bg-mindease-light hover:text-mindease dark:text-gray-300 dark:hover:bg-gray-700"
-      }`}
-    >
-      <Icon size={20} />
-      <span>{label}</span>
-    </NavLink>
-  );
-
-  const navigationItems = [
-    {
-      name: "Home",
-      path: "/dashboard",
-      icon: Home,
-    },
-    {
-      name: "Mood Tracker",
-      path: "/mood-tracker",
-      icon: BarChart3,
-    },
-    {
-      name: "Exercises",
-      path: "/exercises",
-      icon: Activity,
-    },
-    {
-      name: "Relaxation Audio",
-      path: "/relaxation-audio",
-      icon: Music,
-    },
-    {
-      name: "Chat",
-      path: "/chat",
-      icon: MessageSquare,
-    },
-    {
-      name: "Resources",
-      path: "/resources",
-      icon: BookOpen,
-    },
-    {
-      name: "Contact",
-      path: "/contact",
-      icon: Phone,
-    },
+  const navLinks = [
+    { to: "/dashboard", label: "Dashboard", icon: <BarChart className="h-4 w-4 mr-2" /> },
+    { to: "/chat", label: "AI Assistant", icon: <MessageSquare className="h-4 w-4 mr-2" /> },
+    { to: "/resources", label: "Resources", icon: <Book className="h-4 w-4 mr-2" /> },
+    { to: "/exercises", label: "Exercises", icon: <Dumbbell className="h-4 w-4 mr-2" /> },
+    { to: "/relaxation", label: "Relaxation Audio", icon: <Headphones className="h-4 w-4 mr-2" /> },
+    { to: "/doctors", label: "Doctor Contacts", icon: <PhoneCall className="h-4 w-4 mr-2" /> },
   ];
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <div className="flex items-center">
-          <Logo />
-        </div>
+    <nav className="bg-white dark:bg-gray-800 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/dashboard" className="flex items-center">
+              <Logo className="h-8 w-8" />
+              <span className="ml-2 font-semibold text-lg text-gray-900 dark:text-white">Mindease</span>
+            </Link>
+          </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:space-x-4">
-          {navigationItems.map((item) => (
-            <NavItem
-              key={item.name}
-              to={item.path}
-              icon={item.icon}
-              label={item.name}
-            />
-          ))}
-        </div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:space-x-4">
+            {user && (
+              <>
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-mindease dark:text-gray-300 dark:hover:text-white transition-colors"
+                  >
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                ))}
+              </>
+            )}
+          </div>
 
-        {/* Profile & Logout (Desktop) */}
-        <div className="hidden md:flex md:items-center md:space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={toggleDarkMode}
-            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </Button>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {user?.email}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={handleLogout}
-          >
-            <LogOut size={20} />
-          </Button>
-        </div>
+          <div className="flex items-center">
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src="/placeholder.svg"
+                        alt="User avatar"
+                      />
+                      <AvatarFallback className="bg-mindease text-white">
+                        {user.email?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.user_metadata?.name || "User"}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/mood-tracker">Mood Tracker</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleSignOut}
+                  >
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-        {/* Mobile Menu Button */}
-        <div className="flex md:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </Button>
-        </div>
-      </div>
+            {/* Mobile menu button */}
+            <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="inline-flex md:hidden items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Mindease</SheetTitle>
+                </SheetHeader>
+                <div className="py-4">
+                  {user && (
+                    <div className="space-y-2">
+                      {navLinks.map((link) => (
+                        <Link
+                          key={link.to}
+                          to={link.to}
+                          className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-mindease hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {link.icon}
+                          {link.label}
+                        </Link>
+                      ))}
+                      <div className="pt-4">
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={handleSignOut}
+                        >
+                          Log out
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
-      {/* Mobile Navigation Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
-          <div className="absolute right-0 h-screen w-64 bg-white p-4 shadow-lg dark:bg-gray-800">
-            <div className="mb-6 flex items-center justify-between">
-              <span className="font-semibold dark:text-white">Menu</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                onClick={() => setIsOpen(false)}
-              >
-                <X size={20} />
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              {navigationItems.map((item) => (
-                <NavItem
-                  key={item.name}
-                  to={item.path}
-                  icon={item.icon}
-                  label={item.name}
-                />
-              ))}
-              
-              <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex w-full items-center justify-start space-x-2 px-3 py-2"
-                onClick={toggleDarkMode}
-              >
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
-              </Button>
-              
-              <div className="flex items-center space-x-2 rounded-lg px-3 py-2">
-                <User size={20} />
-                <span className="text-sm dark:text-gray-300">{user?.email}</span>
-              </div>
-              
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center space-x-2 rounded-lg px-3 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900 dark:hover:text-red-400"
-              >
-                <LogOut size={20} />
-                <span>Logout</span>
-              </button>
-            </div>
+                  {!user && (
+                    <div className="space-y-2">
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        asChild
+                      >
+                        <Link to="/login" onClick={() => setIsOpen(false)}>
+                          Log in
+                        </Link>
+                      </Button>
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        asChild
+                      >
+                        <Link to="/signup" onClick={() => setIsOpen(false)}>
+                          Sign up
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

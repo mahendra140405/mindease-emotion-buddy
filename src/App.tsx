@@ -1,88 +1,45 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "./components/ui/sonner";
+
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
-import MoodTrackerPage from "./pages/MoodTrackerPage";
-import ExercisesPage from "./pages/ExercisesPage";
-import ExerciseDetailPage from "./pages/ExerciseDetailPage";
-import ChatPage from "./pages/ChatPage";
-import ResourcesPage from "./pages/ResourcesPage";
-import ContactPage from "./pages/ContactPage";
-import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import NotFound from "./pages/NotFound";
+import ContactPage from "./pages/ContactPage";
+import MoodTrackerPage from "./pages/MoodTrackerPage";
+import ChatPage from "./pages/ChatPage";
+import ResourcesPage from "./pages/ResourcesPage";
+import ExercisesPage from "./pages/ExercisesPage";
+import ExerciseDetailPage from "./pages/ExerciseDetailPage";
 import RelaxationAudioPage from "./pages/RelaxationAudioPage";
+import DoctorsContactPage from "./pages/DoctorsContactPage";
 
-// Initialize the query client outside of the component
-const queryClient = new QueryClient();
+import './App.css';
 
-const ThemeInitializer = () => {
-  useEffect(() => {
-    // Check if dark mode preference is saved
-    const darkMode = localStorage.getItem("darkMode") === "true";
-    
-    // Apply dark mode class if enabled
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
-  
-  return null;
+const App = () => {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/mood-tracker" element={<MoodTrackerPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/exercises" element={<ExercisesPage />} />
+        <Route path="/exercise/:id" element={<ExerciseDetailPage />} />
+        <Route path="/relaxation" element={<RelaxationAudioPage />} />
+        <Route path="/doctors" element={<DoctorsContactPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </AuthProvider>
+  );
 };
-
-// Protected route component that uses the useAuth hook
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-  
-  return <>{children}</>;
-};
-
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/mood-tracker" element={<ProtectedRoute><MoodTrackerPage /></ProtectedRoute>} />
-    <Route path="/exercises" element={<ProtectedRoute><ExercisesPage /></ProtectedRoute>} />
-    <Route path="/exercises/:id" element={<ProtectedRoute><ExerciseDetailPage /></ProtectedRoute>} />
-    <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-    <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />
-    <Route path="/relaxation-audio" element={<ProtectedRoute><RelaxationAudioPage /></ProtectedRoute>} />
-    <Route path="/contact" element={<ContactPage />} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <Router>
-      <TooltipProvider>
-        <ThemeInitializer />
-        <Toaster />
-        <Sonner />
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </TooltipProvider>
-    </Router>
-  </QueryClientProvider>
-);
 
 export default App;
