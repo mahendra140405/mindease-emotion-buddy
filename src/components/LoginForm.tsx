@@ -20,10 +20,16 @@ const LoginForm = () => {
     e.preventDefault();
     setErrorMessage("");
     
+    if (!email || !password) {
+      setErrorMessage("Please enter both email and password");
+      toast.error("Please enter both email and password");
+      return;
+    }
+    
     try {
       const result = await signIn(email, password);
       if (result && result.error) {
-        setErrorMessage(result.error);
+        setErrorMessage("Invalid email or password. Please try again.");
         toast.error("Login failed. Please check your credentials.");
       } else {
         toast.success("Login successful!");

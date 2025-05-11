@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "@/components/Logo";
 import { Brain } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -16,10 +17,15 @@ const SignupForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [formError, setFormError] = useState("");
 
   const validatePassword = () => {
     if (password !== confirmPassword) {
       setPasswordError("Passwords don't match");
+      return false;
+    }
+    if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
       return false;
     }
     setPasswordError("");
@@ -28,12 +34,29 @@ const SignupForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     
-    if (!validatePassword()) {
+    // Validate all fields
+    if (!name || !email || !password || !confirmPassword) {
+      setFormError("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
     
-    await signUp(email, password, name);
+    if (!validatePassword()) {
+      toast.error(passwordError);
+      return;
+    }
+    
+    try {
+      await signUp(email, password, name);
+      toast.success("Account created successfully! Please login.");
+      navigate("/login");
+    } catch (error) {
+      console.error("Signup error:", error);
+      setFormError("Failed to create account. Please try again.");
+      toast.error("Signup failed. Please try again later.");
+    }
   };
 
   return (
@@ -49,6 +72,12 @@ const SignupForm = () => {
         
         <div className="mt-8 bg-white p-8 shadow-md rounded-2xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {formError && (
+              <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-md text-sm">
+                {formError}
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -86,6 +115,7 @@ const SignupForm = () => {
                 required
                 className="rounded-lg"
               />
+              <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
             </div>
             
             <div className="space-y-2">
