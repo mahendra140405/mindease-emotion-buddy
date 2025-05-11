@@ -20,7 +20,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Logo from "./Logo";
-import { Menu, BarChart, MessageSquare, Book, Dumbbell, Headphones, PhoneCall } from "lucide-react";
+import { Menu, BarChart, MessageSquare, Book, Dumbbell, Headphones, PhoneCall, Star } from "lucide-react";
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
@@ -41,6 +41,7 @@ const NavBar = () => {
     { to: "/exercises", label: "Exercises", icon: <Dumbbell className="h-4 w-4 mr-2" /> },
     { to: "/relaxation", label: "Relaxation Audio", icon: <Headphones className="h-4 w-4 mr-2" /> },
     { to: "/doctors", label: "Doctor Contacts", icon: <PhoneCall className="h-4 w-4 mr-2" /> },
+    { to: "/feedback", label: "Feedback", icon: <Star className="h-4 w-4 mr-2" /> },
   ];
 
   return (
@@ -108,6 +109,9 @@ const NavBar = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/mood-tracker">Mood Tracker</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/feedback">Feedback</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem

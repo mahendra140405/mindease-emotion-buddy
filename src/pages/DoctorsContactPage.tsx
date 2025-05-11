@@ -7,8 +7,16 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Video, Phone } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Globe, Video, PhoneCall } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Doctor {
   id: number;
@@ -68,27 +76,29 @@ const DoctorsContactPage = () => {
   const { user, loading } = useAuth();
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [callType, setCallType] = useState<"video" | "audio" | null>(null);
+  const [callInProgress, setCallInProgress] = useState(false);
   const { toast } = useToast();
 
   const handleCallRequest = (doctor: Doctor, type: "video" | "audio") => {
     setSelectedDoctor(doctor);
     setCallType(type);
+    setCallInProgress(true);
     
     // In a real application, this would initiate a call
     toast({
       title: `${type.charAt(0).toUpperCase() + type.slice(1)} call requested`,
       description: `Connecting you with ${doctor.name}...`,
     });
-    
-    // Simulate a response after 2 seconds
-    setTimeout(() => {
-      toast({
-        title: "Call scheduled",
-        description: `Your ${type} call with ${doctor.name} has been scheduled. You'll receive a confirmation email shortly.`,
-      });
-      setSelectedDoctor(null);
-      setCallType(null);
-    }, 2000);
+  };
+
+  const endCall = () => {
+    toast({
+      title: "Call ended",
+      description: `Your call with ${selectedDoctor?.name} has ended.`,
+    });
+    setSelectedDoctor(null);
+    setCallType(null);
+    setCallInProgress(false);
   };
 
   if (loading) {
@@ -156,7 +166,7 @@ const DoctorsContactPage = () => {
                       className="flex items-center"
                       onClick={() => handleCallRequest(doctor, "audio")}
                     >
-                      <Phone className="h-4 w-4 mr-2" />
+                      <PhoneCall className="h-4 w-4 mr-2" />
                       Call
                     </Button>
                     <Button 
@@ -174,6 +184,56 @@ const DoctorsContactPage = () => {
           ))}
         </div>
       </div>
+
+      {/* Call Dialog */}
+      <Dialog open={callInProgress} onOpenChange={(open) => !open && endCall()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {callType === "video" ? "Video Call" : "Audio Call"} with {selectedDoctor?.name}
+            </DialogTitle>
+            <DialogDescription>
+              {callType === "video" ? "Video" : "Audio"} session in progress...
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-center items-center p-6">
+            {callType === "video" ? (
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-lg w-full aspect-video flex items-center justify-center">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src={selectedDoctor?.image} alt={selectedDoctor?.name} />
+                  <AvatarFallback className="bg-mindease text-white text-4xl">
+                    {selectedDoctor?.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <Avatar className="h-32 w-32 mb-4">
+                  <AvatarImage src={selectedDoctor?.image} alt={selectedDoctor?.name} />
+                  <AvatarFallback className="bg-mindease text-white text-4xl">
+                    {selectedDoctor?.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center mt-2">
+                  <p>Call duration: 00:00</p>
+                  <p className="text-sm text-muted-foreground">Audio connected</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="flex justify-center">
+            <Button 
+              variant="destructive" 
+              onClick={endCall}
+              className="w-full sm:w-auto"
+            >
+              End Call
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

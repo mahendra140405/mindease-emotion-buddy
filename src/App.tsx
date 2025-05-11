@@ -16,6 +16,7 @@ import ExercisesPage from "./pages/ExercisesPage";
 import ExerciseDetailPage from "./pages/ExerciseDetailPage";
 import RelaxationAudioPage from "./pages/RelaxationAudioPage";
 import DoctorsContactPage from "./pages/DoctorsContactPage";
+import FeedbackPage from "./pages/FeedbackPage";
 
 import './App.css';
 
@@ -35,6 +36,7 @@ const App = () => {
         <Route path="/exercise/:id" element={<ExerciseDetailPage />} />
         <Route path="/relaxation" element={<RelaxationAudioPage />} />
         <Route path="/doctors" element={<DoctorsContactPage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
