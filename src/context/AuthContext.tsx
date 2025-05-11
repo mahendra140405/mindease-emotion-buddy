@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -114,7 +115,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Mock: Signing in with', email);
         
         // Mock validation check - simple demo to demonstrate wrong password functionality
-        if (password === "wrongpassword") {
+        if (password === "wrongpassword" || password.length < 6) {
+          console.log('Mock: Invalid login credentials');
           return { error: "Invalid login credentials" };
         }
         
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        console.log('Sign in error:', error.message);
         return { error: error.message };
       }
       
