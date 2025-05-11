@@ -1,4 +1,10 @@
 
-import { useToast, toast } from "@/components/ui/toast-hooks";
+import { toast } from "sonner";
 
-export { useToast, toast };
+export { toast };
+
+export const useToast = () => {
+  return {
+    toast,
+  };
+};
