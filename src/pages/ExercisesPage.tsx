@@ -6,14 +6,15 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CBTExercises from "@/components/exercises/CBTExercises";
 import GratitudePractices from "@/components/exercises/GratitudePractices";
-import { ExternalLink, Lightbulb, HeartHandshake } from "lucide-react";
+import { ExternalLink, Lightbulb, HeartHandshake, Brain, List } from "lucide-react";
+import ExerciseList from "@/components/ExerciseList";
 
 const ExercisesPage = () => {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("cbt");
+  const [activeTab, setActiveTab] = useState("exercises");
 
   useEffect(() => {
-    // You can add analytics tracking or preferences saving here
+    // Load user's preferred tab from localStorage
     const savedTab = localStorage.getItem("preferred-exercise");
     if (savedTab) {
       setActiveTab(savedTab);
@@ -43,10 +44,14 @@ const ExercisesPage = () => {
       <div className="container mx-auto py-6 px-4">
         <h1 className="text-2xl font-bold mb-6">Mental Wellness Exercises</h1>
 
-        <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="flex space-x-4 mb-6">
+        <Tabs defaultValue={activeTab} onValueChange={handleTabChange} className="space-y-4">
+          <TabsList className="flex flex-wrap space-x-2 space-y-2 sm:space-y-0">
+            <TabsTrigger value="exercises" className="flex items-center">
+              <List className="mr-2 h-4 w-4" />
+              All Exercises
+            </TabsTrigger>
             <TabsTrigger value="cbt" className="flex items-center">
-              <Lightbulb className="mr-2 h-4 w-4" />
+              <Brain className="mr-2 h-4 w-4" />
               CBT Exercises
             </TabsTrigger>
             <TabsTrigger value="gratitude" className="flex items-center">
@@ -55,13 +60,21 @@ const ExercisesPage = () => {
             </TabsTrigger>
           </TabsList>
           
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <TabsContent value="cbt">
-              <CBTExercises />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <TabsContent value="exercises" className="focus-visible:outline-none focus-visible:ring-0">
+              <ExerciseList />
             </TabsContent>
             
-            <TabsContent value="gratitude">
-              <GratitudePractices />
+            <TabsContent value="cbt" className="focus-visible:outline-none focus-visible:ring-0">
+              <div className="p-6">
+                <CBTExercises />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="gratitude" className="focus-visible:outline-none focus-visible:ring-0">
+              <div className="p-6">
+                <GratitudePractices />
+              </div>
             </TabsContent>
           </div>
         </Tabs>
