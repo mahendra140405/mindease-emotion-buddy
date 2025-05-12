@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
@@ -8,12 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Star, Check } from "lucide-react";
 
 const FeedbackPage = () => {
   const { user, loading } = useAuth();
-  const { toast } = useToast();
   
   const [feedback, setFeedback] = useState("");
   const [rating, setRating] = useState<string>("3");
@@ -25,10 +23,7 @@ const FeedbackPage = () => {
     // In a real app, this would send data to a backend
     console.log("Submitted feedback:", { feedback, rating });
     
-    toast({
-      title: "Feedback submitted",
-      description: "Thank you for your valuable feedback!",
-    });
+    toast("Thank you for your valuable feedback!");
     
     setSubmitted(true);
   };

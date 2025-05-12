@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
@@ -8,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Video, PhoneCall } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -77,7 +76,6 @@ const DoctorsContactPage = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [callType, setCallType] = useState<"video" | "audio" | null>(null);
   const [callInProgress, setCallInProgress] = useState(false);
-  const { toast } = useToast();
 
   const handleCallRequest = (doctor: Doctor, type: "video" | "audio") => {
     setSelectedDoctor(doctor);
@@ -85,17 +83,11 @@ const DoctorsContactPage = () => {
     setCallInProgress(true);
     
     // In a real application, this would initiate a call
-    toast({
-      title: `${type.charAt(0).toUpperCase() + type.slice(1)} call requested`,
-      description: `Connecting you with ${doctor.name}...`,
-    });
+    toast(`${type.charAt(0).toUpperCase() + type.slice(1)} call requested - Connecting you with ${doctor.name}...`);
   };
 
   const endCall = () => {
-    toast({
-      title: "Call ended",
-      description: `Your call with ${selectedDoctor?.name} has ended.`,
-    });
+    toast(`Your call with ${selectedDoctor?.name} has ended.`);
     setSelectedDoctor(null);
     setCallType(null);
     setCallInProgress(false);
