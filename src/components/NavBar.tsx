@@ -20,7 +20,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Logo from "./Logo";
-import { Menu, BarChart, MessageSquare, Book, Dumbbell, Headphones, PhoneCall, Star } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
+import { Menu, BarChart, MessageSquare, Book, Dumbbell, Headphones, PhoneCall, Star, Mail } from "lucide-react";
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
@@ -34,14 +35,16 @@ const NavBar = () => {
     setIsOpen(open);
   };
 
+  // Reordered navigation links as requested
   const navLinks = [
-    { to: "/dashboard", label: "Dashboard", icon: <BarChart className="h-4 w-4 mr-2" /> },
-    { to: "/chat", label: "AI Assistant", icon: <MessageSquare className="h-4 w-4 mr-2" /> },
-    { to: "/resources", label: "Resources", icon: <Book className="h-4 w-4 mr-2" /> },
+    { to: "/dashboard", label: "Home", icon: <BarChart className="h-4 w-4 mr-2" /> },
+    { to: "/mood-tracker", label: "Mood Tracker", icon: <BarChart className="h-4 w-4 mr-2" /> },
     { to: "/exercises", label: "Exercises", icon: <Dumbbell className="h-4 w-4 mr-2" /> },
     { to: "/relaxation", label: "Relaxation Audio", icon: <Headphones className="h-4 w-4 mr-2" /> },
+    { to: "/chat", label: "Chat", icon: <MessageSquare className="h-4 w-4 mr-2" /> },
     { to: "/doctors", label: "Doctor Contacts", icon: <PhoneCall className="h-4 w-4 mr-2" /> },
-    { to: "/feedback", label: "Feedback", icon: <Star className="h-4 w-4 mr-2" /> },
+    { to: "/contact", label: "Contact", icon: <Mail className="h-4 w-4 mr-2" /> },
+    { to: "/resources", label: "Resources", icon: <Book className="h-4 w-4 mr-2" /> },
   ];
 
   return (
@@ -73,7 +76,10 @@ const NavBar = () => {
             )}
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
