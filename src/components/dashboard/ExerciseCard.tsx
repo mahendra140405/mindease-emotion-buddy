@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface ExerciseCardProps {
   title: string;
@@ -26,6 +26,13 @@ const ExerciseCard = ({
   icon,
   link,
 }: ExerciseCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleExerciseClick = () => {
+    // Ensure we navigate to the correct exercise detail page
+    navigate(link);
+  };
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="pb-2">
@@ -37,11 +44,14 @@ const ExerciseCard = ({
         <p className="text-sm text-muted-foreground">{description}</p>
       </CardContent>
       <CardFooter>
-        <Button variant="ghost" size="sm" className="w-full gap-1 text-mindease" asChild>
-          <Link to={link}>
-            Begin Exercise
-            <ArrowRight size={16} />
-          </Link>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full gap-1 text-mindease"
+          onClick={handleExerciseClick}
+        >
+          Begin Exercise
+          <ArrowRight size={16} />
         </Button>
       </CardFooter>
     </Card>

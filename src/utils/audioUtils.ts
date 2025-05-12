@@ -4,10 +4,10 @@
 // Audio tracks for relaxation exercises
 const audioTracks = {
   "Guided Breathing": "/sounds/guided-breathing.mp3",
-  "Ocean Waves": "/sounds/ocean-waves.mp3",
-  "Forest Sounds": "/sounds/forest-sounds.mp3",
-  "Gentle Rain": "/sounds/gentle-rain.mp3",
-  "Meditation": "/sounds/meditation.mp3",
+  "Ocean Waves": "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes",
+  "Forest Sounds": "https://soundcloud.com/soundsofnaturewhitenoiseformindfulnessmeditationandrelaxation/gentle-forest-stream-and",
+  "Gentle Rain": "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes",
+  "Meditation": "https://soundcloud.com/relaxing-white-noise/meditation-bell-sound",
 };
 
 // Store current audio instance
@@ -46,7 +46,7 @@ export const playAudio = (trackName: string) => {
         .catch(error => {
           console.error("Audio playback failed:", error);
           // Try fallback audio from a public CDN
-          audio.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
+          audio.src = "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes";
           audio.play()
             .then(() => {
               currentAudio = audio;
@@ -61,7 +61,7 @@ export const playAudio = (trackName: string) => {
     console.error("Audio playback error:", error);
     // Try fallback audio
     try {
-      audio.src = "https://assets.mixkit.co/sfx/preview/mixkit-forest-birds-ambient-2532.mp3";
+      audio.src = "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes";
       audio.play()
         .then(() => {
           currentAudio = audio;

@@ -21,29 +21,29 @@ const audioTracks: AudioTrack[] = [
     id: "1",
     title: "Ocean Waves",
     description: "Calming sounds of gentle ocean waves breaking on the shore.",
-    duration: "10 minutes",
-    audioSrc: "/sounds/ocean-waves.mp3"
+    duration: "75 minutes",
+    audioSrc: "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes"
   },
   {
     id: "2",
     title: "Gentle Rain",
     description: "Soothing sounds of rainfall to help you relax and unwind.",
-    duration: "15 minutes",
-    audioSrc: "/sounds/gentle-rain.mp3"
+    duration: "75 minutes",
+    audioSrc: "https://soundcloud.com/relaxing-white-noise/ocean-waves-and-gentle-rain-75-minutes"
   },
   {
     id: "3",
     title: "Forest Sounds",
     description: "Immerse yourself in the peaceful sounds of a forest environment.",
     duration: "20 minutes",
-    audioSrc: "/sounds/forest-sounds.mp3"
+    audioSrc: "https://soundcloud.com/soundsofnaturewhitenoiseformindfulnessmeditationandrelaxation/gentle-forest-stream-and"
   },
   {
     id: "4",
     title: "Meditation Bell",
     description: "Periodic meditation bell sounds to guide your mindfulness practice.",
     duration: "12 minutes",
-    audioSrc: "https://assets.mixkit.co/sfx/preview/mixkit-meditation-bell-599.mp3"
+    audioSrc: "https://soundcloud.com/relaxing-white-noise/meditation-bell-sound"
   }
 ];
 
