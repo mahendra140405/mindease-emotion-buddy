@@ -122,7 +122,7 @@ const ExerciseList = () => {
                   description={exercise.description}
                   duration={exercise.duration}
                   icon={exercise.icon}
-                  link={`/exercises/${exercise.id}`}
+                  link={`/exercise/${exercise.id}`}
                 />
               ))}
             </div>

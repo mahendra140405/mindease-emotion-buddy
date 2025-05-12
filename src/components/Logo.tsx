@@ -20,12 +20,10 @@ const Logo: React.FC<LogoProps> = ({ className = "" }) => {
         strokeLinejoin="round"
         className="text-mindease h-8 w-8"
       >
-        <path d="M14 19a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h11Z" />
-        <path d="M14 13V8a5 5 0 0 0-5-5H7a5 5 0 0 0-5 5v5" />
-        <path d="M9 17v2" />
-        <path d="M9 5v2" />
-        <path d="M22 19v-9a4 4 0 0 0-4-4h-2" />
-        <path d="M16 19h3a3 3 0 0 0 0-6h-3" />
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+        <line x1="9" y1="9" x2="9.01" y2="9" />
+        <line x1="15" y1="9" x2="15.01" y2="9" />
       </svg>
       <span className="ml-2 font-semibold text-lg text-mindease dark:text-white">Mindease</span>
     </div>

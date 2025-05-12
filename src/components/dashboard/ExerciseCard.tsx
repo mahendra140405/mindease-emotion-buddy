@@ -29,8 +29,8 @@ const ExerciseCard = ({
   const navigate = useNavigate();
   
   const handleExerciseClick = () => {
-    // Ensure we navigate to the correct exercise detail page
-    navigate(link);
+    // Update to use the correct route format
+    navigate(link.replace('/exercises/', '/exercise/'));
   };
 
   return (
