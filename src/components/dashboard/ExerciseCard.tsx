@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface ExerciseCardProps {
   title: string;
@@ -29,8 +29,9 @@ const ExerciseCard = ({
   const navigate = useNavigate();
   
   const handleExerciseClick = () => {
-    // Update to use the correct route format
-    navigate(link.replace('/exercises/', '/exercise/'));
+    // Navigate directly to exercise detail page using the correct format
+    const exerciseId = link.split('/').pop();
+    navigate(`/exercise/${exerciseId}`);
   };
 
   return (

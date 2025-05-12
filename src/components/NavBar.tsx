@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
@@ -53,8 +52,7 @@ const NavBar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center">
-              <Logo className="h-8 w-8" />
-              <span className="ml-2 font-semibold text-lg text-gray-900 dark:text-white">Mindease</span>
+              <Logo />
             </Link>
           </div>
 
